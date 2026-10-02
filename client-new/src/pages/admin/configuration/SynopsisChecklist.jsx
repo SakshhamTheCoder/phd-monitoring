@@ -11,6 +11,7 @@ import {
   apiChecklistCreate,
   apiChecklistDelete,
   apiChecklistList,
+  apiChecklistPreview,
   apiChecklistRuleCreate,
   apiChecklistRuleDelete,
   apiChecklistRuleUpdate,
@@ -49,6 +50,10 @@ const SynopsisChecklist = () => {
   const [busy, setBusy] = useState(false);
   const [ruleSaved, flashRuleSaved] = useDoneFlash();
   const [optionSaved, flashOptionSaved] = useDoneFlash();
+  // What a scholar would be offered, asked of the server rather than worked out
+  // here: the merging and the standing-alone rule are the server's to apply.
+  const [ask, setAsk] = useState({ roll_no: '', department: null, admitted_on: '' });
+  const [shown, setShown] = useState(null);
 
   // A category half edited under one condition must not be saved into the
   // next one opened, since the save sends the open condition as its rule.
@@ -154,6 +159,20 @@ const SynopsisChecklist = () => {
     }
   };
 
+  const preview = async () => {
+    const query = ask.roll_no.trim()
+      ? { roll_no: ask.roll_no.trim() }
+      : { department_id: ask.department?.id || '', admitted_on: ask.admitted_on };
+
+    if (!query.roll_no && !query.department_id && !query.admitted_on) {
+      toast.error('Give a registration number, or a department and an admission date.');
+      return;
+    }
+
+    const res = await apiChecklistPreview(query);
+    if (res.success) setShown(res.response);
+  };
+
   /** The condition in one line, as an admin would read it back. */
   const appliesTo = (row) => {
     const departments = row.departments?.length
@@ -174,17 +193,27 @@ const SynopsisChecklist = () => {
     applies: appliesTo(row),
     merging: row.exclusive ? 'Stands alone' : 'Merged',
     categories: `${row.options.filter((one) => one.active).length} of ${row.options.length}`,
+    reach: row.active ? `${row.scholars ?? 0}` : '0',
     shown: row.active ? 'In use' : 'Retired',
   }));
 
   const open = rules.find((row) => row.id === openRule);
   const optionRows = (open?.options || []).map((row) => ({
     ...row,
+    declared: row.forms ?? 0,
     shown: row.active ? 'Offered' : 'Retired',
   }));
 
   return (
     <>
+      {rules.length === 0 && (
+        <p className="config-note config-note--warning">
+          No conditions are written yet, so no scholar is offered a publication category and
+          no supervisor is asked to declare one. Write a condition below and the categories
+          under it start appearing on the synopsis.
+        </p>
+      )}
+
       <div className="config-fields">
         <div className="config-filter-row">
           <div className="input-field-container config-field-240">
@@ -296,8 +325,8 @@ const SynopsisChecklist = () => {
         elements={[
           <TableComponent
             data={ruleRows}
-            keys={['name', 'applies', 'merging', 'categories', 'shown', 'id']}
-            titles={['Condition', 'Applies to', 'Merging', 'Categories', 'Status', ' ']}
+            keys={['name', 'applies', 'merging', 'categories', 'reach', 'shown', 'id']}
+            titles={['Condition', 'Applies to', 'Merging', 'Categories', 'Scholars', 'Status', ' ']}
             components={[{
               key: 'id',
               component: ({ row }) => (
@@ -318,6 +347,65 @@ const SynopsisChecklist = () => {
         ]}
         space={3}
       />
+
+      <div className="config-fields config-fields--spaced">
+        <div className="config-filter-row">
+          <div className="input-field-container config-field-240">
+            <label className="input-label" htmlFor="preview-roll">What would a scholar see</label>
+            <input
+              id="preview-roll"
+              className="input-field"
+              placeholder="Registration number"
+              value={ask.roll_no}
+              onChange={(e) => setAsk((prev) => ({ ...prev, roll_no: e.target.value }))}
+            />
+          </div>
+          <div className="input-field-container config-field-240">
+            <InputSuggestions
+              label="or a department"
+              apiUrl={`${baseURL}/suggestions/department`}
+              onSelect={(picked) => setAsk((prev) => ({ ...prev, department: picked }))}
+            />
+          </div>
+          <div className="input-field-container config-field-160">
+            <label className="input-label" htmlFor="preview-date">and admitted on</label>
+            <input
+              id="preview-date"
+              type="date"
+              className="input-field"
+              value={ask.admitted_on}
+              onChange={(e) => setAsk((prev) => ({ ...prev, admitted_on: e.target.value }))}
+            />
+          </div>
+          <CustomButton text="Show the list" variant="secondary" onClick={preview} />
+          {shown && <CustomButton text="Clear" variant="quiet" onClick={() => setShown(null)} />}
+        </div>
+
+        {shown && (
+          <div className="config-preview">
+            {shown.options.length === 0 ? (
+              <p className="config-note">
+                Nothing is offered to that scholar, so their supervisor is asked for no
+                declaration. {shown.conditions.length === 0
+                  ? 'No condition covers them.'
+                  : `The conditions that cover them (${shown.conditions.map((one) => one.name).join(', ')}) carry no category that is still offered.`}
+              </p>
+            ) : (
+              <>
+                <p className="config-note">
+                  Their supervisor chooses one of these, under{' '}
+                  {shown.conditions.map((one) => one.name + (one.exclusive ? ' (stands alone)' : '')).join(', ')}.
+                </p>
+                <ol className="config-preview-list">
+                  {shown.options.map((one) => (
+                    <li key={one.id}>{one.label} <span className="config-preview-source">{one.condition}</span></li>
+                  ))}
+                </ol>
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       {open && (
         <>
@@ -368,8 +456,8 @@ const SynopsisChecklist = () => {
             elements={[
               <TableComponent
                 data={optionRows}
-                keys={['label', 'sort_order', 'shown', 'id']}
-                titles={['Category', 'Order', 'Status', ' ']}
+                keys={['label', 'sort_order', 'declared', 'shown', 'id']}
+                titles={['Category', 'Order', 'Declared on', 'Status', ' ']}
                 components={[{
                   key: 'id',
                   component: ({ row }) => (

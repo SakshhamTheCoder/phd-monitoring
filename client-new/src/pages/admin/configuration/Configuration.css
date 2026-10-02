@@ -45,6 +45,26 @@
   max-width: 75ch;
 }
 
+/* A note about something missing rather than something to know. */
+.config-note--warning { color: var(--text); }
+
+/* The list a scholar would be offered, read back under the conditions table. */
+.config-preview { margin-top: var(--space-3); }
+
+.config-preview-list {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+  font-size: var(--text-sm);
+}
+
+.config-preview-list li { margin-bottom: var(--space-1); }
+
+.config-preview-source {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  margin-left: var(--space-2);
+}
+
 .config-field-110 { min-width: 110px; }
 .config-field-140 { min-width: 140px; }
 .config-field-160 { min-width: 160px; }

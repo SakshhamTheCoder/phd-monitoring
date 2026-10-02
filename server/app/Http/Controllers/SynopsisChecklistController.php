@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Department;
 use App\Models\SynopsisChecklistOption;
+use App\Models\Student;
 use App\Models\SynopsisChecklistRule;
 use App\Models\SynopsisSubmission;
 use Illuminate\Http\Request;
@@ -37,13 +38,117 @@ class SynopsisChecklistController extends Controller
         $departments = Department::whereIn('id', $rules->pluck('department_ids')->flatten()->filter()->unique())
             ->pluck('name', 'id');
 
-        $rules->each(function (SynopsisChecklistRule $rule) use ($departments) {
+        // How many scholars a condition actually decides for, and how many
+        // forms have chosen each wording. Without these the page is a list of
+        // rules nobody can tell the reach of, which is the whole question an
+        // admin has when they open it.
+        $reach = $this->scholarsPerRule();
+        $chosen = SynopsisSubmission::whereNotNull('checklist_option_id')
+            ->selectRaw('checklist_option_id, count(*) as forms')
+            ->groupBy('checklist_option_id')
+            ->pluck('forms', 'checklist_option_id');
+
+        $rules->each(function (SynopsisChecklistRule $rule) use ($departments, $reach, $chosen) {
             $rule->departments = collect($rule->department_ids ?: [])
                 ->map(fn ($id) => ['id' => (int) $id, 'name' => $departments[$id] ?? 'Department ' . $id])
                 ->values();
+            $rule->scholars = $reach[$rule->id] ?? 0;
+            $rule->options->each(function (SynopsisChecklistOption $option) use ($chosen) {
+                $option->forms = (int) ($chosen[$option->id] ?? 0);
+            });
         });
 
         return response()->json($rules);
+    }
+
+    /**
+     * What one scholar would be offered, and which conditions say so.
+     *
+     * The conditions merge, and one of them can stand alone and silence the
+     * rest, so reading the list and working out what a given scholar sees is
+     * not something an admin should have to do in their head. Asked either by
+     * registration number or by the two things a condition is written against.
+     */
+    public function preview(Request $request)
+    {
+        $this->authorizeAdmin();
+
+        $request->validate([
+            'roll_no' => 'nullable|string',
+            'department_id' => 'nullable|integer|exists:departments,id',
+            'admitted_on' => 'nullable|date',
+        ]);
+
+        $departmentId = $request->filled('department_id') ? (int) $request->input('department_id') : null;
+        $admittedOn = $request->filled('admitted_on') ? substr((string) $request->input('admitted_on'), 0, 10) : null;
+        $scholar = null;
+
+        if ($request->filled('roll_no')) {
+            $scholar = Student::where('roll_no', trim((string) $request->input('roll_no')))->first();
+            if (!$scholar) {
+                return response()->json(['message' => 'No scholar with that registration number.'], 404);
+            }
+            $departmentId = $scholar->department_id === null ? null : (int) $scholar->department_id;
+            $admittedOn = $scholar->date_of_registration?->toDateString();
+        }
+
+        $rules = SynopsisChecklistRule::matching($departmentId, $admittedOn);
+        $options = SynopsisChecklistOption::whereIn('rule_id', $rules->pluck('id'))
+            ->where('active', true)
+            ->get()
+            ->sortBy(fn (SynopsisChecklistOption $option) => [
+                $rules->pluck('id')->flip()[$option->rule_id], $option->sort_order, $option->id,
+            ])
+            ->values();
+
+        return response()->json([
+            'scholar' => $scholar ? [
+                'roll_no' => $scholar->roll_no,
+                'department' => $scholar->department?->name,
+                'admitted_on' => $admittedOn,
+            ] : null,
+            'conditions' => $rules->map(fn (SynopsisChecklistRule $rule) => [
+                'id' => $rule->id,
+                'name' => $rule->name,
+                'exclusive' => (bool) $rule->exclusive,
+            ])->values(),
+            'options' => $options->map(fn (SynopsisChecklistOption $option) => [
+                'id' => $option->id,
+                'label' => $option->label,
+                'condition' => $rules->firstWhere('id', $option->rule_id)?->name,
+            ])->values(),
+        ]);
+    }
+
+    /**
+     * Scholars whose list each condition decides, counted the way the form
+     * decides it rather than by the condition on its own: a scholar a condition
+     * covers still does not see it where a condition standing alone wins.
+     *
+     * @return array<int, int>
+     */
+    private function scholarsPerRule(): array
+    {
+        $counts = [];
+        $seen = [];
+
+        foreach (Student::select('department_id', 'date_of_registration')->get() as $scholar) {
+            $admitted = $scholar->date_of_registration?->toDateString();
+            $key = $scholar->department_id . '|' . $admitted;
+
+            if (!isset($seen[$key])) {
+                $seen[$key] = SynopsisChecklistRule::matching(
+                    $scholar->department_id === null ? null : (int) $scholar->department_id,
+                    $admitted
+                )->pluck('id')->all();
+            }
+
+            foreach ($seen[$key] as $id) {
+                $counts[$id] = ($counts[$id] ?? 0) + 1;
+            }
+        }
+
+        return $counts;
     }
 
     public function storeRule(Request $request)

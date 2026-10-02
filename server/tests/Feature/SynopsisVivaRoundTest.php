@@ -468,6 +468,33 @@ class SynopsisVivaRoundTest extends TestCase
         $this->assertSame('student', $form->fresh()->stage);
     }
 
+    /**
+     * The admin page asks the server what a scholar would be offered rather
+     * than working the merging out in the browser, so the answer has to name
+     * the conditions it came from as well as the wording.
+     */
+    public function test_the_preview_answers_what_one_scholar_would_be_offered(): void
+    {
+        $general = $this->ruleFor('All other departments', ['sort_order' => 1]);
+        $own = $this->ruleFor('This department only', [
+            'sort_order' => 2,
+            'department_ids' => [$this->department->id],
+            'exclusive' => true,
+        ]);
+        $this->optionOn($general, 'Two SCIE articles', 1);
+        $this->optionOn($own, 'Three SCI publications', 1);
+        $this->optionOn($own, 'Withdrawn wording', 2, false);
+
+        $answer = $this->actingAs($this->userAs('admin'))
+            ->getJson('/api/synopsis-checklist/preview?roll_no=' . $this->scholar->roll_no)
+            ->assertStatus(200)
+            ->json();
+
+        $this->assertSame(['Three SCI publications'], array_column($answer['options'], 'label'));
+        $this->assertSame(['This department only'], array_column($answer['conditions'], 'name'));
+        $this->assertSame($this->scholar->roll_no, $answer['scholar']['roll_no']);
+    }
+
     private function ruleFor(string $name, array $attributes = []): SynopsisChecklistRule
     {
         return SynopsisChecklistRule::create(array_merge(['name' => $name], $attributes));

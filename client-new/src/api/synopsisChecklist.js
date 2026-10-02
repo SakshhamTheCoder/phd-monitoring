@@ -8,6 +8,11 @@ const CHECKLIST = `${baseURL}/synopsis-checklist`;
 
 export const apiChecklistList = () => customFetch(CHECKLIST, 'GET', {});
 
+// What one scholar would be offered, asked either by registration number or by
+// the department and admission date a condition is written against.
+export const apiChecklistPreview = (query) =>
+  customFetch(`${CHECKLIST}/preview?${new URLSearchParams(query).toString()}`, 'GET', {});
+
 export const apiChecklistRuleCreate = (body) => customFetch(`${CHECKLIST}/rules`, 'POST', body, true);
 export const apiChecklistRuleUpdate = (id, body) => customFetch(`${CHECKLIST}/rules/${id}`, 'PATCH', body, true);
 export const apiChecklistRuleDelete = (id) => customFetch(`${CHECKLIST}/rules/${id}`, 'DELETE', {}, true);

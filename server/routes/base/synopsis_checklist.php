@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Route;
 // these: the options a scholar qualifies for ship with the form.
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/', [SynopsisChecklistController::class, 'index']);
+    // What one scholar would be offered, so a condition can be read before it
+    // decides anybody's form.
+    Route::get('/preview', [SynopsisChecklistController::class, 'preview']);
 
     Route::post('/rules', [SynopsisChecklistController::class, 'storeRule']);
     Route::patch('/rules/{id}', [SynopsisChecklistController::class, 'updateRule'])->whereNumber('id');
