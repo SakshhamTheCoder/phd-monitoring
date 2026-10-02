@@ -24,7 +24,10 @@ const TableComponent = ({ data, keys, titles, components = [], rowStyle, rowClas
                         {leading && <th></th>}
                         <th>S.No</th>
                         {titles?.map((title, index) => (
-                            <th key={index}>{title}</th>
+                            // Named so a page can say which of its columns hold
+                            // a sentence and which hold a word, without
+                            // counting columns in a stylesheet.
+                            <th key={index} data-key={keys?.[index]}>{title}</th>
                         ))}
                     </tr>
                 </thead>
@@ -39,7 +42,7 @@ const TableComponent = ({ data, keys, titles, components = [], rowStyle, rowClas
 
                                 const plain = !renderCell && !isFilePath(value);
                                 return (
-                                    <td key={keyIndex} className={plain ? cellClass(value) || undefined : undefined}>
+                                    <td key={keyIndex} data-key={key} className={plain ? cellClass(value) || undefined : undefined}>
                                         {renderCell ? (
                                             renderCell({ row, data: value })
                                         ) : isFilePath(value) ? (

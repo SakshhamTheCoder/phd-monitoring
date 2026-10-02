@@ -17,15 +17,35 @@
 .config-fields--spaced { margin-top: var(--space-5); }
 
 /* Its own rule, not FilterBar's .filter-row: that stylesheet only loads with
-   a FilterBar, so on a fresh load of this page the fields stacked. */
+   a FilterBar, so on a fresh load of this page the fields stacked.
+
+   A grid rather than a wrapping flex row. These labels run long ("LMTSM,
+   admitted before July 2024") and some fields carry a hint underneath, and in a
+   flex row that left every field a different height and every input on its own
+   line. Equal columns, and the label keeps room for two lines whether it needs
+   them or not, so the inputs sit on one line across the row. */
 .config-filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--space-3);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4) var(--space-3);
+  align-items: start;
 }
 
-.config-filter-row .input-field-container { margin: 0; flex: 1 1 0; }
+.config-filter-row .input-field-container { margin: 0; min-width: 0; }
+
+.config-filter-row .input-label {
+  align-items: flex-end;
+  min-height: 2.6em;
+  margin-bottom: var(--space-1);
+}
+
+/* A tick box is its own label, so it belongs on the field line rather than the
+   label line above it. */
+.config-filter-row .config-check { align-self: end; }
+.config-filter-row .config-check .input-label { min-height: 0; margin-bottom: 0; }
+
+/* A sentence rather than a value, so it takes two columns where there is room. */
+.config-filter-row .config-field-440 { grid-column: span 2; }
 
 .config-chip-row {
   display: flex;
@@ -36,7 +56,14 @@
 /* A department picked into the rule pops in where it landed. */
 .config-chip-row button { animation: pop-in 150ms ease-out; }
 
-.config-push { margin-left: auto; display: flex; gap: var(--space-2); }
+/* The actions end the row on a line of their own, so they are not wedged
+   between two fields of different heights. */
+.config-push {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
 
 .config-note {
   font-size: var(--text-sm);
@@ -65,6 +92,23 @@
   margin-left: var(--space-2);
 }
 
+/* The checklist's two tables. Only the columns that hold a sentence wrap; the
+   rest are a word or a number and used to break in the middle ("In / use")
+   because the sentence column had taken the width. */
+.config-table th,
+.config-table td { white-space: nowrap; }
+
+.config-table th[data-key="name"],
+.config-table td[data-key="name"],
+.config-table th[data-key="applies"],
+.config-table td[data-key="applies"],
+.config-table th[data-key="label"],
+.config-table td[data-key="label"] { white-space: normal; }
+
+/* And the sentence column takes whatever is left over. */
+.config-table td[data-key="applies"],
+.config-table td[data-key="label"] { width: 100%; }
+
 .config-field-110 { min-width: 110px; }
 .config-field-140 { min-width: 140px; }
 .config-field-160 { min-width: 160px; }
@@ -80,6 +124,8 @@
 /* A phone has no room for a 440px field, and the widths above hold a filter row
    open at its widest field. */
 @media (max-width: 768px) {
+  .config-filter-row { grid-template-columns: 1fr; }
+
   .config-field-110,
   .config-field-140,
   .config-field-160,
@@ -91,6 +137,10 @@
   .config-field-440,
   .config-filter-row .input-field-container {
     min-width: 0;
-    flex: 1 1 100%;
   }
+
+  .config-filter-row .config-field-440 { grid-column: span 1; }
+
+  /* A label no longer has a neighbour to line up with. */
+  .config-filter-row .input-label { min-height: 0; }
 }

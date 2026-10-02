@@ -175,8 +175,13 @@ const SynopsisChecklist = () => {
 
   /** The condition in one line, as an admin would read it back. */
   const appliesTo = (row) => {
-    const departments = row.departments?.length
-      ? row.departments.map((department) => department.name).join(', ')
+    // Named departments are listed, but a condition can cover twenty of them,
+    // and the full list squeezed every other column off the table. The chips
+    // under the form hold the whole list while a condition is being edited.
+    const named = row.departments || [];
+    const departments = named.length
+      ? named.slice(0, 4).map((department) => department.name).join(', ')
+        + (named.length > 4 ? `, and ${named.length - 4} more` : '')
       : 'Any department';
     const from = onDate(row.admitted_from);
     const to = onDate(row.admitted_to);
@@ -272,7 +277,7 @@ const SynopsisChecklist = () => {
               onChange={(e) => setRule((prev) => ({ ...prev, sort_order: e.target.value }))}
             />
           </div>
-          <div className="input-field-container config-field-220">
+          <div className="input-field-container config-check config-field-220">
             <label className="input-label" htmlFor="rule-exclusive">
               <input
                 id="rule-exclusive"
@@ -283,7 +288,7 @@ const SynopsisChecklist = () => {
               {' '}These categories stand alone
             </label>
           </div>
-          <div className="input-field-container config-field-160">
+          <div className="input-field-container config-check config-field-160">
             <label className="input-label" htmlFor="rule-active">
               <input
                 id="rule-active"
@@ -294,10 +299,12 @@ const SynopsisChecklist = () => {
               {' '}Apply this condition
             </label>
           </div>
-          <CustomButton text={editingRule ? 'Save changes' : 'Add condition'} onClick={saveRule} done={ruleSaved} disabled={busy} />
-          {editingRule && (
-            <CustomButton text="Cancel" variant="quiet" onClick={() => { setEditingRule(null); setRule(EMPTY_RULE); }} />
-          )}
+          <div className="config-push">
+            <CustomButton text={editingRule ? 'Save changes' : 'Add condition'} onClick={saveRule} done={ruleSaved} disabled={busy} />
+            {editingRule && (
+              <CustomButton text="Cancel" variant="quiet" onClick={() => { setEditingRule(null); setRule(EMPTY_RULE); }} />
+            )}
+          </div>
         </div>
 
         {rule.departments.length > 0 && (
@@ -323,6 +330,7 @@ const SynopsisChecklist = () => {
       <GridContainer
         label={`Conditions (${rules.length})`}
         elements={[
+          <div className="config-table" key="conditions">
           <TableComponent
             data={ruleRows}
             keys={['name', 'applies', 'merging', 'categories', 'reach', 'shown', 'id']}
@@ -343,7 +351,8 @@ const SynopsisChecklist = () => {
                 </>
               ),
             }]}
-          />,
+          />
+          </div>,
         ]}
         space={3}
       />
@@ -377,8 +386,10 @@ const SynopsisChecklist = () => {
               onChange={(e) => setAsk((prev) => ({ ...prev, admitted_on: e.target.value }))}
             />
           </div>
-          <CustomButton text="Show the list" variant="secondary" onClick={preview} />
-          {shown && <CustomButton text="Clear" variant="quiet" onClick={() => setShown(null)} />}
+          <div className="config-push">
+            <CustomButton text="Show the list" variant="secondary" onClick={preview} />
+            {shown && <CustomButton text="Clear" variant="quiet" onClick={() => setShown(null)} />}
+          </div>
         </div>
 
         {shown && (
@@ -433,7 +444,7 @@ const SynopsisChecklist = () => {
                   onChange={(e) => setOption((prev) => ({ ...prev, sort_order: e.target.value }))}
                 />
               </div>
-              <div className="input-field-container config-field-160">
+              <div className="input-field-container config-check config-field-160">
                 <label className="input-label" htmlFor="option-active">
                   <input
                     id="option-active"
@@ -444,16 +455,19 @@ const SynopsisChecklist = () => {
                   {' '}Offer this category
                 </label>
               </div>
-              <CustomButton text={editingOption ? 'Save changes' : 'Add category'} variant="secondary" onClick={saveOption} done={optionSaved} disabled={busy} />
-              {editingOption && (
-                <CustomButton text="Cancel" variant="quiet" onClick={() => { setEditingOption(null); setOption(EMPTY_OPTION); }} />
-              )}
+              <div className="config-push">
+                <CustomButton text={editingOption ? 'Save changes' : 'Add category'} variant="secondary" onClick={saveOption} done={optionSaved} disabled={busy} />
+                {editingOption && (
+                  <CustomButton text="Cancel" variant="quiet" onClick={() => { setEditingOption(null); setOption(EMPTY_OPTION); }} />
+                )}
+              </div>
             </div>
           </div>
 
           <GridContainer
             label={`Categories under ${open.name} (${optionRows.length})`}
             elements={[
+              <div className="config-table" key="categories">
               <TableComponent
                 data={optionRows}
                 keys={['label', 'sort_order', 'declared', 'shown', 'id']}
@@ -480,7 +494,8 @@ const SynopsisChecklist = () => {
                     </>
                   ),
                 }]}
-              />,
+              />
+              </div>,
             ]}
             space={3}
           />

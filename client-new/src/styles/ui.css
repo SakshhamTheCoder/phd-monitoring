@@ -801,6 +801,14 @@
 .icon-action + .icon-action { margin-left: 8px; }
 .icon-action:hover { background: var(--primary-wash); }
 
+/* A cell of row actions holds its icons on one line. Without this the column
+   is whatever width the ones beside it leave, and three icons stack into a
+   vertical strip. */
+td:has(> .icon-action) {
+    white-space: nowrap;
+    width: 1%;
+}
+
 /* Row actions and the empty-table row. They lived in the paginated table's
    stylesheet, so a page with its own table only had them after that stylesheet
    happened to load: unstyled on a direct visit, styled after navigating. */

@@ -9,11 +9,16 @@
 
 .urf-projects .section-heading { margin: 0; }
 
-/* The stage tabs and the session they apply to, on one line. */
+/* The stage tabs and the session they apply to, on one line.
+
+   The rule under the tabs belongs to the whole bar, not to the tabs alone:
+   drawn by .tabs it stopped wherever the last tab ended and left the session
+   picker hanging off the end of a line that went nowhere. */
 .urf-stage-bar {
   display: flex;
   align-items: flex-end;
   gap: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 /* Three tabs never need to scroll. The shared rule sets overflow-x, which makes
@@ -22,10 +27,13 @@
   flex: 1;
   margin-bottom: 0;
   overflow: visible;
+  border-bottom: none;
 }
 
 .urf-session-picker {
   min-width: 9rem;
+  /* Off the bar's rule, rather than sitting on it. */
+  margin-bottom: var(--space-2);
 }
 
 /* The row carries the spacing. The picker's own field must not, or flex-end

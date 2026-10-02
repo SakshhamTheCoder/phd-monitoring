@@ -44,18 +44,20 @@
   scrollbar-width: none;
 }
 
-/* Menu Button Styling. Flat links rather than a stack of cards: the current
-   page carries the only colour, a brand bar on the left and a light tint. */
+/* Menu Button Styling. Quiet links rather than a stack of cards, but each one
+   sits on a faint block of its own so its hit area is visible before it is
+   hovered; the current page still carries the only colour, a brand bar on the
+   left and a light tint. */
 .menu-button {
   display: flex;
   align-items: center;
   padding: var(--space-2) var(--space-4);
-  margin: 2px var(--space-3) 2px 0;
-  width: calc(100% - var(--space-3));
+  margin: 3px var(--space-3) 3px var(--space-2);
+  width: calc(100% - var(--space-3) - var(--space-2));
   min-height: 44px; /* uniform height for one- and two-line labels */
   border: none;
-  border-radius: 0 var(--radius) var(--radius) 0;
-  background-color: transparent;
+  border-radius: var(--radius);
+  background-color: var(--canvas);
   color: var(--text-color);
   font-family: inherit;
   font-size: var(--text-base);
@@ -68,11 +70,13 @@
 }
 
 .menu-button:hover {
-  background-color: var(--canvas);
+  background-color: var(--background-color);
   color: var(--primary-color);
 }
 
-.menu-button.active { color: var(--primary-color); }
+/* The tint and the brand bar are the highlight's, drawn behind the links, so
+   the current page's own block steps out of the way to let it through. */
+.menu-button.active { color: var(--primary-color); background-color: transparent; }
 
 /* The current page's tint and bar, one element behind the links that
    CustomNavBar.jsx moves to the active one. Its hover must not cover it. */
@@ -83,9 +87,9 @@
 .menu-highlight {
   position: absolute;
   top: 0;
-  left: 0;
-  width: calc(100% - var(--space-3));
-  border-radius: 0 var(--radius) var(--radius) 0;
+  left: var(--space-2);
+  width: calc(100% - var(--space-3) - var(--space-2));
+  border-radius: var(--radius);
   background-color: var(--primary-wash);
   box-shadow: inset 3px 0 0 var(--primary-color);
   pointer-events: none;
