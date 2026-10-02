@@ -98,6 +98,12 @@ class SynopsisVivaRoundTest extends TestCase
         $head = $this->facultyFor($this->headUser);
         $this->department->forceFill(['hod_id' => $head->faculty_code])->save();
 
+        // The regulations ship as rows now. These tests write their own
+        // conditions and assert the exact list a scholar is offered, so they
+        // start from an empty slate rather than merging with the seeded ones.
+        SynopsisChecklistOption::query()->delete();
+        SynopsisChecklistRule::query()->delete();
+
         $this->dordcUser = $this->userAs('dordc');
         $this->facultyFor($this->dordcUser);
     }
