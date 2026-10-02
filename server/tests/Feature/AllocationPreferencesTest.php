@@ -65,27 +65,46 @@ class AllocationPreferencesTest extends TestCase
         );
     }
 
-    public function test_the_recommender_reads_a_supervisors_broad_area_as_well_as_their_expertise(): void
+    /**
+     * The broad area is one heading per department, so scoring it recommended
+     * everybody in the department for anything asked inside it. What a scholar
+     * picks from, and what is matched, is the specific areas supervisors list.
+     */
+    public function test_the_recommender_reads_the_specific_areas_not_the_broad_one(): void
     {
-        $faculty = \App\Models\Faculty::with('user')
+        $service = app(\App\Services\FacultyRecommendationService::class);
+
+        $filed = \App\Models\Faculty::with('user')
             ->whereNotNull('department_id')->where('type', 'internal')->firstOrFail();
+        $lists = \App\Models\Faculty::with('user')
+            ->where('department_id', $filed->department_id)
+            ->where('faculty_code', '!=', $filed->faculty_code)
+            ->firstOrFail();
 
         $area = AreaOfSpecialization::create([
-            'department_id' => $faculty->department_id,
+            'department_id' => $filed->department_id,
             'name' => 'Zymology',
         ]);
 
-        $faculty->area_of_specialization_id = $area->id;
-        $faculty->expertise = ['Something Unrelated'];
-        $faculty->save();
+        $filed->area_of_specialization_id = $area->id;
+        $filed->expertise = ['Something Unrelated'];
+        $filed->save();
 
-        $recommended = app(\App\Services\FacultyRecommendationService::class)
-            ->recommend(['Zymology'], $faculty->department_id, 8);
+        $lists->area_of_specialization_id = null;
+        $lists->expertise = ['Zymology'];
+        $lists->save();
+
+        $recommended = array_column($service->recommend(['Zymology'], $filed->department_id, 8), 'faculty_code');
 
         $this->assertContains(
-            $faculty->faculty_code,
-            array_column($recommended, 'faculty_code'),
-            'a supervisor whose broad area matches should be recommended for it'
+            $lists->faculty_code,
+            $recommended,
+            'a supervisor who lists the area should be recommended for it'
+        );
+        $this->assertNotContains(
+            $filed->faculty_code,
+            $recommended,
+            'being filed under a broad area of that name is not working on it'
         );
     }
 }

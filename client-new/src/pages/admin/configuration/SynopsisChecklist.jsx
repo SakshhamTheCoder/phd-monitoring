@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import CustomButton from '../../../components/forms/fields/CustomButton';
+import CustomModal from '../../../components/forms/modal/CustomModal';
 import TableComponent from '../../../components/forms/table/TableComponent';
 import GridContainer from '../../../components/forms/fields/GridContainer';
 import InputSuggestions from '../../../components/forms/fields/InputSuggestions';
@@ -48,6 +49,10 @@ const SynopsisChecklist = () => {
   const [option, setOption] = useState(EMPTY_OPTION);
   const [editingOption, setEditingOption] = useState(null);
   const [busy, setBusy] = useState(false);
+  // Both editors are dialogs: the page is two tables, a preview and a note, and
+  // filling a form at the top of it meant scrolling back down to read the row
+  // it had changed.
+  const [editorOpen, setEditorOpen] = useState(null);
   const [ruleSaved, flashRuleSaved] = useDoneFlash();
   const [optionSaved, flashOptionSaved] = useDoneFlash();
   // What a scholar would be offered, asked of the server rather than worked out
@@ -60,6 +65,34 @@ const SynopsisChecklist = () => {
   const showRule = (ruleId) => {
     setOpenRule(ruleId);
     setEditingOption(null);
+    setOption(EMPTY_OPTION);
+  };
+
+  const editCondition = (row = null) => {
+    setEditingRule(row?.id ?? null);
+    setRule(row ? {
+      name: row.name,
+      departments: row.departments || [],
+      admitted_from: onDate(row.admitted_from),
+      admitted_to: onDate(row.admitted_to),
+      exclusive: row.exclusive,
+      sort_order: row.sort_order,
+      active: row.active,
+    } : EMPTY_RULE);
+    setEditorOpen('condition');
+  };
+
+  const editCategory = (row = null) => {
+    setEditingOption(row?.id ?? null);
+    setOption(row ? { label: row.label, sort_order: row.sort_order, active: row.active } : EMPTY_OPTION);
+    setEditorOpen('category');
+  };
+
+  const closeEditor = () => {
+    setEditorOpen(null);
+    setEditingRule(null);
+    setEditingOption(null);
+    setRule(EMPTY_RULE);
     setOption(EMPTY_OPTION);
   };
 
@@ -97,22 +130,8 @@ const SynopsisChecklist = () => {
 
     toast.success(editingRule ? 'Condition updated' : 'Condition added');
     flashRuleSaved();
-    setRule(EMPTY_RULE);
-    setEditingRule(null);
+    closeEditor();
     load();
-  };
-
-  const editRule = (row) => {
-    setEditingRule(row.id);
-    setRule({
-      name: row.name,
-      departments: row.departments || [],
-      admitted_from: onDate(row.admitted_from),
-      admitted_to: onDate(row.admitted_to),
-      exclusive: row.exclusive,
-      sort_order: row.sort_order,
-      active: row.active,
-    });
   };
 
   const removeRule = async (row) => {
@@ -145,8 +164,7 @@ const SynopsisChecklist = () => {
 
     toast.success(editingOption ? 'Category updated' : 'Category added');
     flashOptionSaved();
-    setOption(EMPTY_OPTION);
-    setEditingOption(null);
+    closeEditor();
     load();
   };
 
@@ -219,10 +237,17 @@ const SynopsisChecklist = () => {
         </p>
       )}
 
-      <div className="config-fields">
-        <div className="config-filter-row">
-          <div className="input-field-container config-field-240">
-            <label className="input-label" htmlFor="rule-name">Condition</label>
+      <CustomModal
+        isOpen={editorOpen === 'condition'}
+        onClose={closeEditor}
+        title={editingRule ? 'Edit condition' : 'Add condition'}
+        maxWidth="820px"
+        minHeight="320px"
+      >
+        <div className="config-fields">
+          <div className="config-filter-row">
+            <div className="input-field-container config-field-240">
+              <label className="input-label" htmlFor="rule-name">Condition</label>
             <input
               id="rule-name"
               className="input-field"
@@ -299,36 +324,41 @@ const SynopsisChecklist = () => {
               {' '}Apply this condition
             </label>
           </div>
+          </div>
+
+          {rule.departments.length > 0 && (
+            <div className="config-chip-row">
+              {rule.departments.map((department) => (
+                <button
+                  key={department.id}
+                  type="button"
+                  className="icon-action"
+                  title={`Remove ${department.name} from this condition`}
+                  onClick={() => setRule((prev) => ({
+                    ...prev,
+                    departments: prev.departments.filter((one) => one.id !== department.id),
+                  }))}
+                >
+                  {department.name} <i className="fa fa-times" aria-hidden="true"></i>
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="config-push">
             <CustomButton text={editingRule ? 'Save changes' : 'Add condition'} onClick={saveRule} done={ruleSaved} disabled={busy} />
-            {editingRule && (
-              <CustomButton text="Cancel" variant="quiet" onClick={() => { setEditingRule(null); setRule(EMPTY_RULE); }} />
-            )}
+            <CustomButton text="Cancel" variant="quiet" onClick={closeEditor} />
           </div>
         </div>
-
-        {rule.departments.length > 0 && (
-          <div className="config-chip-row">
-            {rule.departments.map((department) => (
-              <button
-                key={department.id}
-                type="button"
-                className="icon-action"
-                title={`Remove ${department.name} from this condition`}
-                onClick={() => setRule((prev) => ({
-                  ...prev,
-                  departments: prev.departments.filter((one) => one.id !== department.id),
-                }))}
-              >
-                {department.name} <i className="fa fa-times" aria-hidden="true"></i>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      </CustomModal>
 
       <GridContainer
-        label={`Conditions (${rules.length})`}
+        label={(
+          <span className="config-section-head">
+            Conditions ({rules.length})
+            <CustomButton text="Add condition" onClick={() => editCondition()} />
+          </span>
+        )}
         elements={[
           <div className="config-table" key="conditions">
           <TableComponent
@@ -342,7 +372,7 @@ const SynopsisChecklist = () => {
                   <button type="button" className="icon-action" onClick={() => showRule(row.id === openRule ? null : row.id)} title="Show the categories under this condition" aria-label="Show the categories under this condition">
                     <i className="fa fa-list" aria-hidden="true"></i>
                   </button>
-                  <button type="button" className="icon-action" onClick={() => editRule(row)} title="Edit condition" aria-label="Edit condition">
+                  <button type="button" className="icon-action" onClick={() => editCondition(row)} title="Edit condition" aria-label="Edit condition">
                     <i className="fa fa-pencil" aria-hidden="true"></i>
                   </button>
                   <button type="button" className="icon-action" onClick={() => removeRule(row)} title="Remove condition" aria-label="Remove condition">
@@ -420,10 +450,17 @@ const SynopsisChecklist = () => {
 
       {open && (
         <>
-          <div className="config-fields config-fields--spaced">
+          <CustomModal
+            isOpen={editorOpen === 'category'}
+            onClose={closeEditor}
+            title={`${editingOption ? 'Edit' : 'Add'} a category under ${open.name}`}
+            maxWidth="720px"
+            minHeight="260px"
+          >
+            <div className="config-fields">
             <div className="config-filter-row">
               <div className="input-field-container config-field-440">
-                <label className="input-label" htmlFor="option-label">Category under {open.name}</label>
+                <label className="input-label" htmlFor="option-label">Category</label>
                 <input
                   id="option-label"
                   className="input-field"
@@ -456,16 +493,20 @@ const SynopsisChecklist = () => {
                 </label>
               </div>
               <div className="config-push">
-                <CustomButton text={editingOption ? 'Save changes' : 'Add category'} variant="secondary" onClick={saveOption} done={optionSaved} disabled={busy} />
-                {editingOption && (
-                  <CustomButton text="Cancel" variant="quiet" onClick={() => { setEditingOption(null); setOption(EMPTY_OPTION); }} />
-                )}
+                <CustomButton text={editingOption ? 'Save changes' : 'Add category'} onClick={saveOption} done={optionSaved} disabled={busy} />
+                <CustomButton text="Cancel" variant="quiet" onClick={closeEditor} />
               </div>
             </div>
-          </div>
+            </div>
+          </CustomModal>
 
           <GridContainer
-            label={`Categories under ${open.name} (${optionRows.length})`}
+            label={(
+              <span className="config-section-head">
+                Categories under {open.name} ({optionRows.length})
+                <CustomButton text="Add category" variant="secondary" onClick={() => editCategory()} />
+              </span>
+            )}
             elements={[
               <div className="config-table" key="categories">
               <TableComponent
@@ -481,10 +522,7 @@ const SynopsisChecklist = () => {
                         className="icon-action"
                         title="Edit category"
                         aria-label="Edit category"
-                        onClick={() => {
-                          setEditingOption(row.id);
-                          setOption({ label: row.label, sort_order: row.sort_order, active: row.active });
-                        }}
+                        onClick={() => editCategory(row)}
                       >
                         <i className="fa fa-pencil" aria-hidden="true"></i>
                       </button>

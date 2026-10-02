@@ -35,7 +35,11 @@
 
 .config-filter-row .input-label {
   align-items: flex-end;
-  min-height: 2.6em;
+  line-height: 1.3;
+  /* Two lines, said in the label's own line-height so a label that wraps fills
+     the space rather than overflowing it and dropping its field below the
+     others. */
+  min-height: calc(2 * 1.3em);
   margin-bottom: var(--space-1);
 }
 
@@ -90,6 +94,15 @@
   color: var(--text-muted);
   font-size: var(--text-xs);
   margin-left: var(--space-2);
+}
+
+/* A table's heading with the button that adds to it on the same line. */
+.config-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
 }
 
 /* The checklist's two tables. Only the columns that hold a sentence wrap; the

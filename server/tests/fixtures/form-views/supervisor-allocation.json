@@ -98,7 +98,7 @@
                             {
                                 "kind": "list",
                                 "type": "list",
-                                "label": "Select 3 broad areas of research",
+                                "label": "Select 3 areas of research",
                                 "key": "broad_area_of_research",
                                 "fixed": true,
                                 "slots": 3,
@@ -309,7 +309,7 @@
                             {
                                 "kind": "list",
                                 "type": "list",
-                                "label": "Select 3 broad areas of research",
+                                "label": "Select 3 areas of research",
                                 "key": "broad_area_of_research",
                                 "fixed": true,
                                 "slots": 3,
@@ -516,7 +516,7 @@
                             {
                                 "kind": "list",
                                 "type": "list",
-                                "label": "Select 3 broad areas of research",
+                                "label": "Select 3 areas of research",
                                 "key": "broad_area_of_research",
                                 "fixed": true,
                                 "slots": 3,
@@ -713,7 +713,7 @@
                             {
                                 "kind": "list",
                                 "type": "list",
-                                "label": "Select 3 broad areas of research",
+                                "label": "Select 3 areas of research",
                                 "key": "broad_area_of_research",
                                 "fixed": true,
                                 "slots": 3,
@@ -890,7 +890,7 @@
                             {
                                 "kind": "list",
                                 "type": "list",
-                                "label": "Select 3 broad areas of research",
+                                "label": "Select 3 areas of research",
                                 "key": "broad_area_of_research",
                                 "fixed": true,
                                 "slots": 3,
@@ -915,9 +915,9 @@
                                     "department_id": 5
                                 },
                                 "limit": 8,
-                                "note": "Based on your broad areas. Free choice: pick anyone or use recommended.",
+                                "note": "Based on the areas you named. Free choice: pick anyone or use recommended.",
                                 "empty_with_areas": "No strong matches yet. Try adding clearer areas or pick manually.",
-                                "empty_without_areas": "Select your 3 broad areas above to see recommendations.",
+                                "empty_without_areas": "Name your 3 areas above to see recommendations.",
                                 "picked": "Preference {n} set to {name}",
                                 "locked": true
                             },
@@ -1109,7 +1109,7 @@
                             {
                                 "kind": "list",
                                 "type": "list",
-                                "label": "Select 3 broad areas of research",
+                                "label": "Select 3 areas of research",
                                 "key": "broad_area_of_research",
                                 "fixed": true,
                                 "slots": 3,
@@ -1138,9 +1138,9 @@
                                     "department_id": 5
                                 },
                                 "limit": 8,
-                                "note": "Based on your broad areas. Free choice: pick anyone or use recommended.",
+                                "note": "Based on the areas you named. Free choice: pick anyone or use recommended.",
                                 "empty_with_areas": "No strong matches yet. Try adding clearer areas or pick manually.",
-                                "empty_without_areas": "Select your 3 broad areas above to see recommendations.",
+                                "empty_without_areas": "Name your 3 areas above to see recommendations.",
                                 "picked": "Preference {n} set to {name}",
                                 "locked": true
                             },
@@ -1324,7 +1324,7 @@
                             {
                                 "kind": "list",
                                 "type": "list",
-                                "label": "Select 3 broad areas of research",
+                                "label": "Select 3 areas of research",
                                 "key": "broad_area_of_research",
                                 "fixed": true,
                                 "slots": 3,
@@ -1512,7 +1512,7 @@
                             {
                                 "kind": "list",
                                 "type": "list",
-                                "label": "Select 3 broad areas of research",
+                                "label": "Select 3 areas of research",
                                 "key": "broad_area_of_research",
                                 "fixed": true,
                                 "slots": 3,

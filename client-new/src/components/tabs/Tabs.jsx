@@ -23,9 +23,18 @@ const Tabs = ({ items, value, onChange, className = '', label }) => {
     if (!bar) return undefined;
     const place = () => {
       const tab = bar.querySelectorAll('[role="tab"]')[activeIndex];
-      setUnderline((previous) => (tab
-        ? { left: tab.offsetLeft, width: tab.offsetWidth, placed: previous !== null }
-        : null));
+      if (!tab) { setUnderline(null); return; }
+      // Under the label, not under the tab's padding as well: a tab is padded
+      // by a space on each side, and an underline that ran the whole width
+      // read as a rule somebody had drawn past the word.
+      const box = getComputedStyle(tab);
+      const left = parseFloat(box.paddingLeft) || 0;
+      const right = parseFloat(box.paddingRight) || 0;
+      setUnderline((previous) => ({
+        left: tab.offsetLeft + left,
+        width: Math.max(tab.offsetWidth - left - right, 1),
+        placed: previous !== null,
+      }));
     };
     place();
     // Labels change width when the web font arrives or the window resizes.

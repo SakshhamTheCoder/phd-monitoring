@@ -51,14 +51,16 @@ class FacultyRecommendationService
             $faculties = $faculties->merge(collect($fallback));
         }
 
-        // A supervisor's broad area describes what they work on just as much as
-        // their expertise list does, so both are scored. Matching on the area id
-        // instead would have been exact but useless here: the scholar is typing
-        // what they hope to pursue, not choosing from the same list.
+        // Scored on the specific areas a supervisor lists, which is the same
+        // vocabulary the scholar picks from. The broad area was scored here too
+        // and is now left out: it is one heading per department, so it pulled
+        // everybody in that department towards every query made inside it.
+        // Somebody who has listed nothing is matched on their department, which
+        // is weak but keeps a thin department from returning nothing at all.
         $docs = [];
         foreach ($faculties as $f) {
             $text = is_array($f->expertise) ? implode(' ', $f->expertise) : (string)($f->expertise ?? '');
-            $text = trim($text . ' ' . ($f->areaOfSpecialization->name ?? ''));
+            $text = trim($text);
             if (!$text) $text = $f->department->name ?? '';
             $docs[$f->faculty_code] = $this->tokens($text);
         }

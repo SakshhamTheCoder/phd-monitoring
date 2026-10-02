@@ -43,10 +43,29 @@ class SuggestionController extends Controller
             'text' => 'nullable|string',
         ]);
 
-        $areas = AreaOfSpecialization::where('department_id', $department->id)
-            ->when($request->filled('text'), fn ($query) => $query->where('name', 'LIKE', '%' . $request->text . '%'))
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        // The specific areas the department's own faculty list, rather than the
+        // dozen broad areas the matrix names. Those broad areas are the heading
+        // a supervisor is filed under; what a scholar is choosing between, and
+        // what the recommender then matches on, is the thing people actually
+        // work on. One expertise cell holds several, comma separated.
+        $typed = trim((string) $request->input('text'));
+
+        $areas = \App\Models\Faculty::where('department_id', $department->id)
+            ->whereNotNull('expertise')
+            ->pluck('expertise')
+            ->flatMap(fn ($listed) => preg_split('/[;,]/', (string) $listed))
+            ->map(fn ($area) => trim(preg_replace('/\s+/', ' ', $area)))
+            ->filter(fn ($area) => $area !== '' && mb_strlen($area) <= 80)
+            ->filter(fn ($area) => $typed === '' || mb_stripos($area, $typed) !== false)
+            // Two people write the same area in two cases; the first spelling
+            // seen is the one offered.
+            ->unique(fn ($area) => mb_strtolower($area))
+            ->sort(fn ($a, $b) => strcasecmp($a, $b))
+            ->take(50)
+            // The field stores what the scholar picks, so the wording is both
+            // the value and the key.
+            ->map(fn ($area) => ['id' => $area, 'name' => $area])
+            ->values();
 
         return response()->json($areas);
     }

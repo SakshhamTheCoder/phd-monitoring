@@ -108,14 +108,15 @@ final class ConfigurationPage extends PageDefinition
                         'min_credits_before_july_2020' => 'Admitted before July 2020',
                         'min_credits_july_2020_to_june_2024' => 'Admitted July 2020 to June 2024',
                         'min_credits_from_july_2024' => 'Admitted July 2024 onwards',
-                        'min_credits_management_before_july_2024' => 'LMTSM, admitted before July 2024',
-                        'min_credits_management_from_july_2024' => 'LMTSM, admitted July 2024 onwards',
+                        'min_credits_management_before_july_2024' => 'LMTSM, before July 2024',
+                        'min_credits_management_from_july_2024' => 'LMTSM, from July 2024',
                         'min_credits_liberal_arts' => 'TSLAS, any year',
-                        'min_credits_executive' => 'Executive programme, any school',
+                        'min_credits_executive' => 'Executive programme',
                     ], 0, 100, '200', [
                         'min_credits_before_july_2020' => 'Engineering, humanities and sciences.',
                         'min_credits_july_2020_to_june_2024' => 'Engineering, humanities and sciences.',
                         'min_credits_from_july_2024' => 'Engineering, humanities and sciences.',
+                        'min_credits_executive' => 'Any school.',
                     ]),
                     'checks' => [
                         ['keys' => ['min_credits_before_july_2020', 'min_credits_july_2020_to_june_2024', 'min_credits_from_july_2024', 'min_credits_management_before_july_2024', 'min_credits_management_from_july_2024', 'min_credits_liberal_arts', 'min_credits_executive'], 'filled' => true, 'message' => 'Fill in every field before saving.'],

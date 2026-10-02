@@ -46,8 +46,9 @@ final class SupervisorAllocationDefinition extends FormDefinition
                 Field::text('Email')->value($data['email'] ?? null),
                 Field::text('Mobile number')->value($data['phone'] ?? null),
             ]),
-            // The scholar's own words; the department's areas are only offered.
-            Field::list('Select 3 broad areas of research')
+            // The scholar's own words; the areas the department's supervisors
+            // list are only offered.
+            Field::list('Select 3 areas of research')
                 ->key('broad_area_of_research')
                 ->editableBy('student')
                 ->lockedIf(!$editing)
@@ -68,9 +69,9 @@ final class SupervisorAllocationDefinition extends FormDefinition
             ])
                 ->onlyIf($editing)
                 ->with([
-                    'note' => 'Based on your broad areas. Free choice: pick anyone or use recommended.',
+                    'note' => 'Based on the areas you named. Free choice: pick anyone or use recommended.',
                     'empty_with_areas' => 'No strong matches yet. Try adding clearer areas or pick manually.',
-                    'empty_without_areas' => 'Select your 3 broad areas above to see recommendations.',
+                    'empty_without_areas' => 'Name your 3 areas above to see recommendations.',
                     'picked' => 'Preference {n} set to {name}',
                 ]),
             Field::list('Select 6 tentative names of supervisors (in order)')
