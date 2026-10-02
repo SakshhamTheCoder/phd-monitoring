@@ -19,8 +19,10 @@ use Illuminate\Support\Facades\DB;
  *
  * The imports report per row and refuse nothing lightly, which is right, but it
  * means a surprise is only found once the records are written. Everything here
- * happens inside a transaction that is always rolled back, so the answer costs
- * nothing but the time.
+ * happens inside a transaction that is rolled back, so the answer costs nothing
+ * but the time. With --commit the same run is kept instead, which is how a sheet
+ * of thousands of rows is imported at all: the page posts them in one request
+ * and a web server will not wait that long.
  *
  * The database is named first, because a rollback still takes locks and nobody
  * should discover afterwards that this ran against production.
@@ -30,9 +32,10 @@ class DryRunImport extends Command
     protected $signature = 'import:dry-run
         {file : a CSV exported from the sheet}
         {--kind=courses : courses, coursework, progress, scholars or faculty}
-        {--out= : write what it would report as JSON, keyed by the row number in the sheet}';
+        {--out= : write what it would report as JSON, keyed by the row number in the sheet}
+        {--commit : keep what the import does instead of rolling it back}';
 
-    protected $description = 'Read a sheet through an import and roll it back, reporting what it would do';
+    protected $description = 'Read a sheet through an import and report what it does, rolling back unless --commit';
 
     public function handle(): int
     {
@@ -61,11 +64,18 @@ class DryRunImport extends Command
         }
         Auth::login($office);
 
+        $keep = (bool) $this->option('commit');
+        if ($keep && !$this->confirm('Keep what this import does to ' . DB::connection()->getDatabaseName() . '?')) {
+            return self::FAILURE;
+        }
+
         DB::beginTransaction();
         try {
             $answer = $this->runImport($rows);
-        } finally {
+            $keep ? DB::commit() : DB::rollBack();
+        } catch (\Throwable $failed) {
             DB::rollBack();
+            throw $failed;
         }
 
         $this->report($answer);
@@ -75,7 +85,8 @@ class DryRunImport extends Command
         }
 
         $this->newLine();
-        $this->info('Rolled back. Nothing above was kept.');
+        $this->info($keep ? 'Kept. Everything above is now on the database.'
+            : 'Rolled back. Nothing above was kept.');
 
         return self::SUCCESS;
     }
@@ -168,9 +179,11 @@ class DryRunImport extends Command
     {
         $data = $answer['data'] ?? [];
         $this->info($answer['message'] ?? 'no answer');
-        $this->line('Would add: ' . ($data['success_count'] ?? 0));
-        $this->line('Would update: ' . ($data['update_count'] ?? 0));
-        $this->line('Would lose: ' . ($data['error_count'] ?? 0));
+        // Said in the past tense once the run is kept, because by now it has.
+        $said = $this->option('commit') ? ['Added', 'Updated', 'Reported'] : ['Would add', 'Would update', 'Would lose'];
+        $this->line("{$said[0]}: " . ($data['success_count'] ?? 0));
+        $this->line("{$said[1]}: " . ($data['update_count'] ?? 0));
+        $this->line("{$said[2]}: " . ($data['error_count'] ?? 0));
 
         $notes = $data['errors'] ?? [];
         if (!$notes) {
@@ -180,7 +193,8 @@ class DryRunImport extends Command
         }
 
         $this->newLine();
-        $this->line('Every row it would report (' . count($notes) . '):');
+        $this->line('Every row ' . ($this->option('commit') ? 'it reported' : 'it would report')
+            . ' (' . count($notes) . '):');
         foreach ($notes as $note) {
             $this->line('  ' . $note);
         }
