@@ -293,7 +293,7 @@ const LandingPage = () => {
             </div>
             <div className="footer-section">
               <h4>Contact</h4>
-              <p className="footer-text">Email: dordc@thapar.edu</p>
+              <p className="footer-text">Email: dorsp@thapar.edu</p>
               <p className="footer-text">Office Hours: Mon-Fri, 9 AM - 5 PM</p>
             </div>
           </div>
