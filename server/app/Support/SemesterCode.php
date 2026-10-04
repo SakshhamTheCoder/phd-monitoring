@@ -43,6 +43,20 @@ class SemesterCode
         $year += $year < 100 ? 2000 : 0;
 
         if (in_array($month, ['jan', 'feb', 'mar', 'apr', 'may', 'jun'], true)) {
+            // "June 2025 - December 2025" and "june-dc 2025" are the odd
+            // semester written from a month early: the range covers the second
+            // half of the year, and the office types the month their period
+            // began rather than the month the institute's did. "dc" is December
+            // with a letter missing, which the sheet writes more than once.
+            //
+            // Only June. A range from January or April that ends in December is
+            // a calendar year written loosely, and in this sheet those rows sit
+            // between two odd semesters, so what they name is the even one.
+            $rest = substr($value, strlen($matches[1]) + (int) strpos($value, $matches[1]));
+            if ($month === 'jun' && preg_match('/(oct|nov|dec|dc)/i', $rest)) {
+                return sprintf('%02d%02dODD', $year % 100, ($year + 1) % 100);
+            }
+
             return sprintf('%02d%02dEVEN', ($year - 1) % 100, $year % 100);
         }
 
