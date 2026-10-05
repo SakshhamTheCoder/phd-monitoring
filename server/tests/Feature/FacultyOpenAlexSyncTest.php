@@ -141,6 +141,31 @@ class FacultyOpenAlexSyncTest extends TestCase
         $this->assertSame('non-sci', $rows->first()->type);
     }
 
+    public function test_a_paper_neither_side_has_a_doi_for_is_matched_on_its_title(): void
+    {
+        $faculty = $this->faculty();
+        FacultyPublication::create([
+            'faculty_code' => $faculty->faculty_code,
+            'external_id' => 'scopus:2-s2.0-84964316532',
+            'source' => 'scopus',
+            'title' => 'Wormhole and sybil attack in WSN: A review',
+            'publication_type' => 'conference',
+        ]);
+
+        $this->fakeOpenAlex([[
+            'id' => 'https://openalex.org/W5',
+            'type' => 'conference-paper',
+            // Punctuated and capitalised differently by every source, and with
+            // no DOI on either side there is nothing else to compare on.
+            'display_name' => 'Wormhole and Sybil attack in WSN - a review',
+            'publication_year' => 2015,
+        ]]);
+
+        (new SyncFacultyPublications($faculty->faculty_code))->handle();
+
+        $this->assertSame(1, FacultyPublication::where('faculty_code', $faculty->faculty_code)->count());
+    }
+
     public function test_rows_left_by_the_older_orcid_import_are_replaced_unless_edited(): void
     {
         $faculty = $this->faculty();

@@ -120,12 +120,17 @@ class SyncFacultyPublications implements ShouldQueue
             // so a paper Scopus supplied, or one somebody edited by hand, is
             // not imported a second time. This source's own rows are left out
             // of the list so that re-running still refreshes them.
-            $seenDois = FacultyPublication::where('faculty_code', $faculty->faculty_code)
+            $already = FacultyPublication::where('faculty_code', $faculty->faculty_code)
                 ->where(fn ($rows) => $rows->whereNull('external_id')->orWhere('external_id', 'NOT LIKE', 'openalex:%'))
-                ->pluck('doi_link')
-                ->filter()
-                ->map(fn ($doi) => $this->bareDoi($doi))
-                ->all();
+                ->get(['doi_link', 'title']);
+
+            $seenDois = $already->pluck('doi_link')->filter()->map(fn ($doi) => $this->bareDoi($doi))->all();
+
+            // Titles as well, for the papers neither side has a DOI for. A
+            // conference paper stored from Scopus without one is in OpenAlex
+            // without one too, and comparing DOIs alone imported it a second
+            // time. Only consulted when the work has no DOI to compare on.
+            $seenTitles = $already->pluck('title')->filter()->map(fn ($title) => $this->bareTitle($title))->all();
 
             $cursor = '*';
             $imported = 0;
@@ -152,7 +157,7 @@ class SyncFacultyPublications implements ShouldQueue
 
                 $works = $response->json('results', []);
                 foreach ($works as $work) {
-                    if ($this->storeOpenAlexWork($faculty, $work, $seenDois)) $imported++;
+                    if ($this->storeOpenAlexWork($faculty, $work, $seenDois, $seenTitles)) $imported++;
                 }
 
                 $cursor = $response->json('meta.next_cursor');
@@ -175,13 +180,18 @@ class SyncFacultyPublications implements ShouldQueue
      * One OpenAlex work, stored unless it is a kind this page does not list or
      * a paper already on the record. Answers whether it was taken.
      */
-    private function storeOpenAlexWork(Faculty $faculty, array $work, array $seenDois): bool
+    private function storeOpenAlexWork(Faculty $faculty, array $work, array $seenDois, array $seenTitles): bool
     {
         $publicationType = $this->openAlexType((string) ($work['type'] ?? ''));
         if (!$publicationType) return false;
 
         $doi = $work['doi'] ?? null;
-        if ($doi && in_array($this->bareDoi($doi), $seenDois, true)) return false;
+
+        if ($doi) {
+            if (in_array($this->bareDoi($doi), $seenDois, true)) return false;
+        } elseif (in_array($this->bareTitle($work['display_name'] ?? ''), $seenTitles, true)) {
+            return false;
+        }
 
         $venue = data_get($work, 'primary_location.source.display_name');
         $firstPage = data_get($work, 'biblio.first_page');
@@ -288,6 +298,17 @@ class SyncFacultyPublications implements ShouldQueue
     private function bareDoi(?string $doi): string
     {
         return strtolower(trim(preg_replace('#^https?://(dx\.)?doi\.org/#i', '', (string) $doi)));
+    }
+
+    /**
+     * A title reduced to what two records can be compared on, since the same
+     * paper is punctuated and capitalised differently by every source. The
+     * year is left out: a stored row often has none, and two distinct papers
+     * sharing a title word for word is rarer than that.
+     */
+    private function bareTitle(?string $title): string
+    {
+        return preg_replace('/[^a-z0-9]/', '', strtolower((string) $title));
     }
 
     private function syncScopus(Faculty $faculty): int
