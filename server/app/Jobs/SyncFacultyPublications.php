@@ -230,7 +230,10 @@ class SyncFacultyPublications implements ShouldQueue
                     'year' => substr($entry['prism:coverDate'] ?? '', 0, 4) ?: null,
                     'doi_link' => isset($entry['prism:doi']) ? 'https://doi.org/' . $entry['prism:doi'] : null,
                     'volume' => $entry['prism:volume'] ?? null,
-                    'issn' => isset($entry['prism:issn']) ? (int) preg_replace('/\D/', '', $entry['prism:issn']) : null,
+                    // Stored as written. The column was an integer once, which
+                    // is why this stripped the hyphen and the check digit X;
+                    // it is text now, so "1234-567X" survives.
+                    'issn' => isset($entry['prism:issn']) ? trim($entry['prism:issn']) : null,
                     'publication_type' => $publicationType,
                     // Scopus is the one source that can confirm a journal is
                     // Scopus indexed, which is what 'non-sci' means on this
