@@ -378,7 +378,14 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
             onSelect={(picked) =>
               field.picks
                 ? setValues((now) => {
-                    const next = Object.fromEntries(Object.entries(field.picks).map(([key, from]) => [key, picked[from]]));
+                    // A row that carries nothing for one of the keys leaves that
+                    // field alone. A DOI's record is often missing a volume or
+                    // a page range, and picking it must not wipe what was typed.
+                    const next = Object.fromEntries(
+                      Object.entries(field.picks)
+                        .map(([key, from]) => [key, picked[from]])
+                        .filter(([, value]) => value !== undefined && value !== null)
+                    );
                     const changed = Object.entries(next).some(([key, value]) => String(now[key]) !== String(value));
                     const cleared = changed ? Object.fromEntries((field.clears || []).map((key) => [key, ""])) : {};
                     return { ...now, ...next, ...cleared };

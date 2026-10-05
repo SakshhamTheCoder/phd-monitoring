@@ -624,4 +624,116 @@ class SuggestionController extends Controller
 
         return response()->json($designations);
     }
+
+    /**
+     * A publication's record, read from its DOI.
+     *
+     * doi.org's own content negotiation is asked rather than Crossref directly:
+     * it answers for DataCite and mEDRA DOIs as well, and returns one flat
+     * CSL-JSON record instead of Crossref's envelope. A DOI with nothing
+     * registered against it still comes back as a row, so a paper whose
+     * publisher deposited no metadata can still be entered by hand.
+     */
+    public function suggestDoi(Request $request)
+    {
+        $request->validate([
+            'text' => 'required|string',
+        ]);
+
+        // A DOI is pasted as "10.1000/xyz", "doi:10.1000/xyz" or the doi.org
+        // link, all three of which are the same DOI. The text goes into a URL,
+        // so nothing but this shape may reach it.
+        $doi = preg_replace('#^(https?://(dx\.)?doi\.org/|doi:)#i', '', trim($request->text));
+        if (!preg_match('#^10\.\d{4,9}/\S+$#', $doi)) {
+            return response()->json([], 200);
+        }
+
+        // Only a record that was found is kept, so a timeout is not remembered
+        // as "this DOI has nothing" for the rest of the day.
+        $key = 'doi_record_' . strtolower($doi);
+        $record = Cache::get($key);
+        if ($record === null) {
+            $record = $this->fetchDoiRecord($doi);
+            if ($record) {
+                Cache::put($key, $record, now()->addHours(24));
+            }
+        }
+
+        return response()->json([$this->doiRow($doi, $record)]);
+    }
+
+    /**
+     * What doi.org holds for a DOI, as CSL-JSON, or an empty list.
+     *
+     * The contact address identifies the portal to Crossref, which answers
+     * identified callers from a separate pool with a higher rate limit.
+     */
+    private function fetchDoiRecord(string $doi): array
+    {
+        $path = implode('/', array_map('rawurlencode', explode('/', $doi)));
+
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/vnd.citationstyles.csl+json',
+                'User-Agent' => config('app.name', 'PhD Monitoring') . ' (mailto:' . config('mail.from.address') . ')',
+            ])->timeout(10)->get('https://doi.org/' . $path);
+
+            if (!$response->successful()) {
+                return [];
+            }
+
+            return is_array($response->json()) ? $response->json() : [];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('DOI lookup failed', ['doi' => $doi, 'msg' => $e->getMessage()]);
+            return [];
+        }
+    }
+
+    /**
+     * One suggestion row: the text the box shows, and the values the form's
+     * fields are filled from. A value the record does not carry is left out
+     * rather than sent empty, so picking a thin record does not wipe what the
+     * scholar has already typed.
+     */
+    private function doiRow(string $doi, array $record): array
+    {
+        $first = fn ($value) => is_array($value) ? (string) ($value[0] ?? '') : (string) ($value ?? '');
+
+        $title = $first($record['title'] ?? null);
+        $journal = $first($record['container-title'] ?? null);
+        $year = data_get($record, 'issued.date-parts.0.0') ?: data_get($record, 'published.date-parts.0.0');
+
+        // The form offers this year and three either side, so a year outside
+        // that has no option to land in and is left to be answered.
+        $year = $year && abs((int) $year - (int) now()->year) <= 3 ? (string) (int) $year : null;
+
+        $authors = collect($record['author'] ?? [])
+            ->map(function ($author) {
+                $family = trim((string) ($author['family'] ?? $author['literal'] ?? ''));
+                $given = trim((string) ($author['given'] ?? ''));
+                // "Bhatia T." - the style the faculty sync already writes.
+                return $family === '' ? null : $family . ($given !== '' ? ' ' . mb_substr($given, 0, 1) . '.' : '');
+            })
+            ->filter()
+            ->unique()
+            ->implode(', ');
+
+        $values = array_filter([
+            'doi' => 'https://doi.org/' . $doi,
+            'title' => $title,
+            'authors' => $authors,
+            'journal' => $journal,
+            'volume' => (string) ($record['volume'] ?? ''),
+            'page_no' => (string) ($record['page'] ?? ''),
+            'year' => $year,
+            'issn' => $first($record['ISSN'] ?? null),
+            'publisher' => (string) ($record['publisher'] ?? ''),
+        ], fn ($value) => $value !== null && $value !== '');
+
+        $shown = $title === ''
+            ? $doi . ' (no record found)'
+            : $title . ($journal !== '' ? ' - ' . $journal : '') . ($year ? ', ' . $year : '');
+
+        return ['id' => $doi, 'name' => $shown] + $values;
+    }
 }
