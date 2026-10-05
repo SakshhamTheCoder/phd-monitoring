@@ -48,10 +48,10 @@ class PageViewsTest extends TestCase
         $admin = $this->actingAs($this->account('admin'))->getJson('/api/views/courses')->assertOk();
         $this->assertSame(['Tag student', 'Import coursework', 'Import course details', 'Add course'], array_column($admin->json('actions'), 'label'));
         // Only admin picks the department; the others post it empty for the server to fill.
-        $this->assertSame('select', $admin->json('dialogs.add.rows.0.rows.3.type'));
+        $this->assertSame('select', $admin->json('dialogs.add.rows.0.rows.4.type'));
 
         $hod = $this->actingAs($this->account('hod'))->getJson('/api/views/courses')->assertOk();
-        $this->assertSame('hidden', $hod->json('dialogs.add.rows.0.rows.3.type'));
+        $this->assertSame('hidden', $hod->json('dialogs.add.rows.0.rows.4.type'));
         $this->assertNotNull($hod->json('dialogs.tag'));
 
         $this->actingAs($this->account('student'))->getJson('/api/views/courses')->assertForbidden();

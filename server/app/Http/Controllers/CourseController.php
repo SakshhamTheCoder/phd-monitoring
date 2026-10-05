@@ -58,6 +58,7 @@ class CourseController extends Controller
                     'course_code' => $course->course_code,
                     'course_name' => $course->course_name,
                     'credits' => $course->credits,
+                    'level' => $course->level,
                     'department_id' => $course->department_id,
                     'department_name' => $course->department->name ?? 'N/A',
                     // Everyone the subject has been tagged to, not only those
@@ -78,8 +79,8 @@ class CourseController extends Controller
                 'current_page' => $courses->currentPage(),
                 'totalPages' => $courses->lastPage(),
                 'role' => $role,
-                'fields' => ['course_code', 'course_name', 'credits', 'department_name', 'scholars_count'],
-                'fieldsTitles' => ['Course Code', 'Course Name', 'Credits', 'Department', 'Scholars tagged'],
+                'fields' => ['course_code', 'course_name', 'credits', 'level', 'department_name', 'scholars_count'],
+                'fieldsTitles' => ['Course Code', 'Course Name', 'Credits', 'Level', 'Department', 'Scholars tagged'],
             ], 200);
         } catch (\Exception $e) {
             Log::error('Error listing courses: ' . $e->getMessage());
@@ -148,6 +149,7 @@ class CourseController extends Controller
                 'course_code' => 'required|string|unique:courses,course_code',
                 'course_name' => 'required|string',
                 'credits' => 'required|numeric|min:0',
+                'level' => 'nullable|in:masters,doctoral',
                 'department_id' => 'required|integer|exists:departments,id',
             ]);
 
@@ -155,6 +157,7 @@ class CourseController extends Controller
             $course->course_code = $request->course_code;
             $course->course_name = $request->course_name;
             $course->credits = $request->credits;
+            $course->level = $request->input('level') ?: null;
             $course->department_id = $request->department_id;
             $course->save();
 
@@ -191,6 +194,7 @@ class CourseController extends Controller
                 'course_code' => 'required|string|unique:courses,course_code,' . $id,
                 'course_name' => 'required|string',
                 'credits' => 'required|numeric|min:0',
+                'level' => 'nullable|in:masters,doctoral',
                 'department_id' => 'required|integer|exists:departments,id',
             ]);
 
@@ -208,6 +212,7 @@ class CourseController extends Controller
             $course->course_code = $request->course_code;
             $course->course_name = $request->course_name;
             $course->credits = $request->credits;
+            $course->level = $request->input('level') ?: null;
             $course->department_id = $request->department_id;
             $course->save();
 
@@ -326,6 +331,7 @@ class CourseController extends Controller
             'course_code' => CsvRow::column($row, 'Course Code', 'Subject Code', 'course_code'),
             'course_name' => CsvRow::column($row, 'Course Name', 'Subject Name', 'Subject', 'course_name'),
             'credits' => CsvRow::column($row, 'Credits', 'credits'),
+            'level' => CsvRow::column($row, 'Level', 'Course Level', 'level'),
             'department_code' => CsvRow::column($row, 'Department Code', 'Department', 'department_code'),
             'row_number' => $row['_rowNumber'] ?? $row['row_number'] ?? null,
         ], $rows), fn (array $row) => $row['course_code'] !== ''));
@@ -356,11 +362,12 @@ class CourseController extends Controller
                 $course->course_code,
                 $course->course_name,
                 (float) $course->credits > 0 ? (string) $course->credits : '',
+                $course->level ?? '',
                 optional($course->department)->code ?? '',
             ]);
 
         return response()->json([
-            'headers' => ['Course Code', 'Course Name', 'Credits', 'Department Code'],
+            'headers' => ['Course Code', 'Course Name', 'Credits', 'Level', 'Department Code'],
             'rows' => $rows,
             'count' => $rows->count(),
         ]);
@@ -449,6 +456,19 @@ class CourseController extends Controller
                     } else {
                         $errors[] = "Row {$rowNumber}: credits read '{$row['credits']}', "
                             . "which is not a number, so the credits were left as they were";
+                    }
+                }
+                // Masters or doctoral, which decides whether the subject
+                // counts towards the eight masters level courses a B.E. or
+                // B.Tech entrant owes. A blank cell leaves it as it was, and a
+                // word that is neither is reported rather than stored.
+                if (($row['level'] ?? '') !== '') {
+                    $level = strtolower(trim($row['level']));
+                    if (in_array($level, ['masters', 'doctoral'], true)) {
+                        $course->level = $level;
+                    } else {
+                        $errors[] = "Row {$rowNumber}: level read '{$row['level']}', "
+                            . "which is neither 'masters' nor 'doctoral', so the level was left as it was";
                     }
                 }
                 if ($department) {

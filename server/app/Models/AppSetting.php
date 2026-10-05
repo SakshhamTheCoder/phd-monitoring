@@ -87,6 +87,14 @@ class AppSetting extends Model
                 'min_credits_management_from_july_2024' => 36,
                 'min_credits_liberal_arts' => 45,
                 'min_credits_executive' => 12,
+                // An executive candidate admitted on a four year undergraduate
+                // degree owes these on top of the UGC figure: the first at 75
+                // per cent or above, the second between 60 and 75.
+                'min_credits_executive_ug_extra' => 12,
+                'min_credits_executive_accelerated' => 36,
+                // Counted in courses, not credits: what a B.E. or B.Tech entrant
+                // owes at masters level.
+                'min_masters_courses_bachelors_entry' => 8,
             ],
             'rules' => [
                 'min_credits_before_july_2020' => 'required|integer|min:0|max:100',
@@ -96,6 +104,9 @@ class AppSetting extends Model
                 'min_credits_management_from_july_2024' => 'required|integer|min:0|max:100',
                 'min_credits_liberal_arts' => 'required|integer|min:0|max:100',
                 'min_credits_executive' => 'required|integer|min:0|max:100',
+                'min_credits_executive_ug_extra' => 'required|integer|min:0|max:100',
+                'min_credits_executive_accelerated' => 'required|integer|min:0|max:100',
+                'min_masters_courses_bachelors_entry' => 'required|integer|min:0|max:100',
             ],
             // The scholar is told what they still owe, and every role that reads
             // their coursework is shown the same total they are measured against.

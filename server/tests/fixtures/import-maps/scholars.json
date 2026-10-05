@@ -121,7 +121,10 @@
         "institution": "Elsewhere Institute"
       },
       "named_without_email": [],
-      "row_number": 2
+      "row_number": 2,
+      "highest_qualification": null,
+      "qualification_institute": "",
+      "qualification_percentage": ""
     },
     {
       "full_name": "",
@@ -154,7 +157,10 @@
         "institution": ""
       },
       "named_without_email": [],
-      "row_number": 3
+      "row_number": 3,
+      "highest_qualification": null,
+      "qualification_institute": "",
+      "qualification_percentage": ""
     },
     {
       "full_name": "Third",
@@ -187,7 +193,10 @@
         "institution": ""
       },
       "named_without_email": [],
-      "row_number": 4
+      "row_number": 4,
+      "highest_qualification": null,
+      "qualification_institute": "",
+      "qualification_percentage": ""
     }
   ]
 }

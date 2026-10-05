@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\AppSetting;
+use App\Models\Course;
 use App\Models\Student;
 
 /**
@@ -21,12 +22,12 @@ use App\Models\Student;
  * executive programme), the lower figure is what is required, because this is
  * the gate: a scholar with 14 has met a 14 to 16 requirement.
  *
- * Two of the institute's rules are not here, because the portal does not hold
- * what they are decided on. Candidates admitted with a B.E. or B.Tech must take
- * eight masters level courses, which is a count of courses and needs the entry
- * qualification. An executive candidate's extra credits depend on whether they
- * hold a PG degree and on their undergraduate percentage. Neither is a column
- * the portal has, so both stay with the office.
+ * The institute's other two rules are decided on the qualification a scholar
+ * was admitted with, which `students` now records. An executive candidate's
+ * credits depend on whether they hold a postgraduate degree and, if not, on
+ * their undergraduate percentage; a candidate admitted with a B.E. or B.Tech
+ * owes eight masters level courses on top of their credits, which is a count of
+ * courses rather than a total, and is answered by mastersCoursesFor().
  */
 class CourseworkRequirement
 {
@@ -48,11 +49,8 @@ class CourseworkRequirement
 
     public static function for(Student $student): int
     {
-        // The executive programme is a UGC figure of 12 to 16 credits whatever
-        // the school. What a particular executive candidate owes on top of it
-        // depends on their degree and percentage, which nobody has recorded.
         if ($student->current_status === 'executive') {
-            return self::credits('min_credits_executive');
+            return self::executive($student);
         }
 
         $code = strtoupper((string) ($student->department->code ?? ''));
@@ -82,6 +80,69 @@ class CourseworkRequirement
         return self::credits($admitted >= self::JULY_2020
             ? 'min_credits_july_2020_to_june_2024'
             : 'min_credits_before_july_2020');
+    }
+
+    /**
+     * The executive programme, where the school does not matter but the degree
+     * the candidate was admitted on does.
+     *
+     * Everyone owes the UGC figure of 12 to 16 credits. A candidate admitted on
+     * a postgraduate degree owes that alone. One admitted on a four year
+     * undergraduate degree owes more: twelve further masters level credits at
+     * 75 per cent or above, and the 36 credit accelerated masters programme
+     * between 60 and 75.
+     *
+     * A record with no qualification or no percentage on it owes the UGC figure
+     * alone. The alternative is to charge somebody for a band nobody has said
+     * they are in, and the blank is visible on their profile for the office to
+     * fill.
+     */
+    private static function executive(Student $student): int
+    {
+        $base = self::credits('min_credits_executive');
+
+        if ($student->highest_qualification !== 'bachelors') {
+            return $base;
+        }
+
+        $percentage = $student->qualification_percentage;
+        if ($percentage === null) {
+            return $base;
+        }
+
+        if ((float) $percentage >= 75) {
+            return $base + self::credits('min_credits_executive_ug_extra');
+        }
+
+        if ((float) $percentage >= 60) {
+            return $base + self::credits('min_credits_executive_accelerated');
+        }
+
+        // Below 60 the institute states no route, so nothing is added to the
+        // UGC figure and the admission is the office's to question.
+        return $base;
+    }
+
+    /**
+     * The masters level courses a scholar must pass, as a count rather than a
+     * credit total: a candidate admitted with a B.E. or B.Tech owes eight,
+     * whether they are full time or part time. An executive candidate is not
+     * counted here, because executive() has already charged them for the same
+     * rule in credits.
+     *
+     * Zero until the office has marked some courses as masters level. Nobody
+     * can pass a masters level course while no course is one, and a
+     * requirement nothing can satisfy would read as a scholar's failure rather
+     * than as a column waiting to be filled. Drop the check once the levels are
+     * in and the requirement stands on the setting alone.
+     */
+    public static function mastersCoursesFor(Student $student): int
+    {
+        if ($student->highest_qualification !== 'bachelors') return 0;
+        if (!in_array($student->current_status, ['full-time', 'part-time'], true)) return 0;
+        if (!Course::where('level', 'masters')->exists()) return 0;
+
+        return self::credits('min_masters_courses_bachelors_entry');
     }
 
     private static function credits(string $key): int

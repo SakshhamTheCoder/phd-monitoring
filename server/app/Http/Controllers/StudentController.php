@@ -74,7 +74,10 @@ class StudentController extends Controller {
                 'fathers_name' => 'nullable|string',
                 'address' => 'nullable|string',
                 'overall_progress' => 'nullable|numeric',
-                'cgpa' => 'nullable|numeric'
+                'cgpa' => 'nullable|numeric',
+                'highest_qualification' => 'nullable|in:bachelors,masters',
+                'qualification_institute' => 'nullable|string|max:255',
+                'qualification_percentage' => 'nullable|numeric|min:0|max:100',
             ]
         );
 
@@ -120,6 +123,14 @@ class StudentController extends Controller {
         $student->current_status = $request->current_status;
         $student->address = $request->address;
         $student->cgpa = $request->cgpa;
+        // What they were admitted on, which decides the executive credits and
+        // the masters level courses a B.Tech entrant owes.
+        $student->highest_qualification = $request->input('highest_qualification') ?: null;
+        $student->qualification_institute = $request->input('qualification_institute') ?: null;
+        $student->qualification_percentage = $request->input('qualification_percentage') === null
+            || $request->input('qualification_percentage') === ''
+            ? null
+            : $request->input('qualification_percentage');
         // A null is "not stated"; boolean() would read it as No.
         $student->is_jrf = $request->input('is_jrf') === null ? null : $request->boolean('is_jrf');
         $student->net_gate = $request->input('net_gate') ?: null;
@@ -163,6 +174,9 @@ class StudentController extends Controller {
         'net_gate',
         'overall_progress',
         'current_status',
+        'highest_qualification',
+        'qualification_institute',
+        'qualification_percentage',
         'date_of_registration',
         'date_of_irb',
         'date_of_synopsis',
@@ -568,6 +582,10 @@ class StudentController extends Controller {
             'is_jrf' => self::yesNo($column($row, 'JRF?', 'JRF', 'is_jrf')),
             'net_gate' => self::netGate($column($row, 'NET/Gate', 'NET/GATE', 'NET/Gate (Yes/No)', 'net_gate', 'is_net_gate_qualified')),
             'overall_progress' => $column($row, 'Overall Progress', 'overall_progress'),
+            // What they were admitted on, which the coursework rules read.
+            'highest_qualification' => self::qualificationLevel($column($row, 'Highest Qualification', 'Qualification', 'highest_qualification')),
+            'qualification_institute' => $column($row, 'Qualifying Institute', 'Qualification Institute', 'qualification_institute'),
+            'qualification_percentage' => $column($row, 'Qualifying Percentage', 'Qualification Percentage', 'qualification_percentage'),
             'supervisors' => $slots($row, fn ($slot) => ["Supervisor {$slot} Email"]),
             'committee' => $slots($row, fn ($slot) => ["Committee Member {$slot} Email"]),
             // A seat filled with a name and no address. People are matched on
@@ -656,6 +674,29 @@ class StudentController extends Controller {
      * where it can be: GATE, NET, or NA for a plain no. Anything else is kept as
      * the sheet wrote it. Blank is nobody has said.
      */
+    /**
+     * The level a degree named in the sheet is at. The rules turn on the level,
+     * and the sheet writes the degree: "B.Tech", "BE", "M.E.", "MBA".
+     *
+     * A degree neither pattern names is left unset rather than guessed at, so
+     * the office sees a blank on the profile and fills it in.
+     */
+    private static function qualificationLevel(string $value): ?string
+    {
+        $answer = trim($value);
+        if ($answer === '') {
+            return null;
+        }
+        if (preg_match('/^(bachelors?|b\.?\s*e\.?|b\.?\s*tech|b\.?\s*sc|ug|under\s*graduate)/i', $answer)) {
+            return 'bachelors';
+        }
+        if (preg_match('/^(masters?|m\.?\s*e\.?|m\.?\s*tech|m\.?\s*sc|m\.?\s*phil|mba|mca|pg|post\s*graduate)/i', $answer)) {
+            return 'masters';
+        }
+
+        return null;
+    }
+
     private static function netGate(string $value): ?string
     {
         $answer = trim($value);
@@ -783,6 +824,9 @@ class StudentController extends Controller {
             'students.*.address' => 'nullable|string',
             'students.*.overall_progress' => 'nullable|numeric',
             'students.*.cgpa' => 'nullable|numeric',
+            'students.*.highest_qualification' => 'nullable|in:bachelors,masters',
+            'students.*.qualification_institute' => 'nullable|string|max:255',
+            'students.*.qualification_percentage' => 'nullable|numeric|min:0|max:100',
             'students.*.gender' => 'nullable|string',
             'students.*.is_jrf' => 'nullable|boolean',
             'students.*.net_gate' => 'nullable|string|max:40',
@@ -1085,6 +1129,9 @@ class StudentController extends Controller {
             'students.*.fathers_name' => 'nullable|string',
             'students.*.address' => 'nullable|string',
             'students.*.cgpa' => 'nullable|numeric',
+            'students.*.highest_qualification' => 'nullable|in:bachelors,masters',
+            'students.*.qualification_institute' => 'nullable|string|max:255',
+            'students.*.qualification_percentage' => 'nullable|numeric|min:0|max:100',
             'students.*.overall_progress' => 'nullable|numeric',
         ]);
         $updated = 0; $failed = 0; $errors = [];
@@ -1526,6 +1573,9 @@ class StudentController extends Controller {
             'address' => 'nullable|string',
             'overall_progress' => 'nullable|numeric',
             'cgpa' => 'nullable|numeric',
+            'highest_qualification' => 'nullable|in:bachelors,masters',
+            'qualification_institute' => 'nullable|string|max:255',
+            'qualification_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         // Moving a scholar to another department would take them out of reach,
@@ -1565,6 +1615,14 @@ class StudentController extends Controller {
         // Off the office's sheet, like JRF, so it stays on the privileged path.
         if ($request->has('net_gate')) $student->net_gate = $request->input('net_gate') ?: null;
         if ($request->has('overall_progress')) $student->overall_progress = $request->overall_progress;
+        // Admission data off the office's sheet, like JRF, and the coursework
+        // rules read it, so it stays on the privileged path.
+        if ($request->has('highest_qualification')) $student->highest_qualification = $request->input('highest_qualification') ?: null;
+        if ($request->has('qualification_institute')) $student->qualification_institute = $request->input('qualification_institute') ?: null;
+        if ($request->has('qualification_percentage')) {
+            $percentage = $request->input('qualification_percentage');
+            $student->qualification_percentage = ($percentage === null || $percentage === '') ? null : $percentage;
+        }
         $student->save();
 
         return response()->json([

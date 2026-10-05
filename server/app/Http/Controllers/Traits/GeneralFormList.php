@@ -388,6 +388,10 @@ trait GeneralFormList
         // hasFinishedCoursework(), which would sum the credits a second time.
         $completedCredits = $student->completedCredits();
         $requiredCredits = $student->requiredCredits();
+        $requiredMastersCourses = $student->requiredMastersCourses();
+        // Not counted when nothing requires them, which is most scholars: it is
+        // a second query for a number that would always be compared against 0.
+        $completedMastersCourses = $requiredMastersCourses > 0 ? $student->completedMastersCourses() : 0;
 
         return [
             'id' => $student->roll_no,
@@ -433,7 +437,16 @@ trait GeneralFormList
             // add the course table up by hand to know whether they are ready.
             'completed_credits' => $completedCredits,
             'required_credits' => $requiredCredits,
-            'coursework_complete' => $completedCredits >= $requiredCredits,
+            // Counted alongside the credits for a B.E. or B.Tech entrant, who
+            // owes eight masters level courses as well. Zero for everyone else,
+            // and zero until the office has marked courses with a level.
+            'completed_masters_courses' => $completedMastersCourses,
+            'required_masters_courses' => $requiredMastersCourses,
+            'coursework_complete' => $completedCredits >= $requiredCredits
+                && $completedMastersCourses >= $requiredMastersCourses,
+            'highest_qualification' => $student->highest_qualification,
+            'qualification_institute' => $student->qualification_institute,
+            'qualification_percentage' => $student->qualification_percentage,
             'email' => $student->user->email,
             'phone' => $student->user->phone,
             'current_status' => $student->current_status,

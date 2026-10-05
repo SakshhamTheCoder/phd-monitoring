@@ -12,6 +12,7 @@ class Course extends Model
         'course_code',
         'course_name',
         'credits',
+        'level',
         'department_id',
     ];
 

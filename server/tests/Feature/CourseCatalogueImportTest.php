@@ -111,11 +111,11 @@ class CourseCatalogueImportTest extends TestCase
 
         $answer = $this->getJson('/api/courses/missing-details')->assertStatus(200);
 
-        $this->assertSame(['Course Code', 'Course Name', 'Credits', 'Department Code'], $answer->json('headers'));
+        $this->assertSame(['Course Code', 'Course Name', 'Credits', 'Level', 'Department Code'], $answer->json('headers'));
 
         $row = collect($answer->json('rows'))->firstWhere(0, 'ZZCAT105');
         $this->assertNotNull($row);
-        $this->assertSame(['', ''], [$row[2], $row[3]], 'the credits and department columns are the empty ones');
+        $this->assertSame(['', '', ''], [$row[2], $row[3], $row[4]], 'the credits, level and department columns are the empty ones');
     }
 
     public function test_a_scholar_cannot_import_the_catalogue(): void

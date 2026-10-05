@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Course;
 use App\Models\Department;
 use App\Models\Student;
 use App\Support\CourseworkRequirement;
@@ -68,6 +69,69 @@ class CourseworkRequirementTest extends TestCase
         foreach ([['MED', '2019-07-31'], ['LMTSM', '2022-09-30'], ['TSLAS', '2025-10-09']] as [$code, $admitted]) {
             $this->assertSame(12, CourseworkRequirement::for($this->scholar($code, $admitted, 'executive')), $code);
         }
+    }
+
+    /**
+     * What an executive candidate owes on top of the UGC figure, which depends
+     * on the degree they were admitted on. 12 is the UGC figure, 12 more for a
+     * four year undergraduate degree at 75 per cent or above, and the 36 credit
+     * accelerated masters between 60 and 75.
+     *
+     * @return array<string, array{0: ?string, 1: ?float, 2: int}>
+     */
+    public static function executiveEntrants(): array
+    {
+        return [
+            'a postgraduate owes the UGC figure alone' => ['masters', null, 12],
+            'an undergraduate well above the line' => ['bachelors', 82.4, 24],
+            'an undergraduate exactly on 75' => ['bachelors', 75.0, 24],
+            'an undergraduate just under 75' => ['bachelors', 74.99, 48],
+            'an undergraduate in the accelerated band' => ['bachelors', 65.0, 48],
+            'an undergraduate exactly on 60' => ['bachelors', 60.0, 48],
+            'an undergraduate below every band' => ['bachelors', 55.0, 12],
+            'an undergraduate whose percentage nobody recorded' => ['bachelors', null, 12],
+            'a record with no qualification on it' => [null, null, 12],
+        ];
+    }
+
+    /** @dataProvider executiveEntrants */
+    public function test_the_executive_programme_goes_by_the_degree_admitted_on(?string $qualification, ?float $percentage, int $expected): void
+    {
+        $scholar = $this->scholar('MED', '2024-08-20', 'executive');
+        $scholar->highest_qualification = $qualification;
+        $scholar->qualification_percentage = $percentage;
+
+        $this->assertSame($expected, CourseworkRequirement::for($scholar));
+    }
+
+    /**
+     * Eight masters level courses for a B.E. or B.Tech entrant, counted in
+     * courses rather than credits, and only once some course is one.
+     */
+    public function test_a_bachelors_entrant_owes_eight_masters_level_courses(): void
+    {
+        $scholar = $this->scholar('CSED', '2024-08-20');
+        $scholar->highest_qualification = 'bachelors';
+
+        $this->assertSame(0, CourseworkRequirement::mastersCoursesFor($scholar), 'nothing is owed while no course has a level');
+
+        Course::create(['course_code' => 'TEST-MASTERS-LEVEL', 'course_name' => 'A masters level course', 'credits' => 4, 'level' => 'masters']);
+
+        $this->assertSame(8, CourseworkRequirement::mastersCoursesFor($scholar));
+
+        $partTime = $this->scholar('CSED', '2024-08-20', 'part-time');
+        $partTime->highest_qualification = 'bachelors';
+        $this->assertSame(8, CourseworkRequirement::mastersCoursesFor($partTime), 'the rule names regular and part time');
+
+        $postgraduate = $this->scholar('CSED', '2024-08-20');
+        $postgraduate->highest_qualification = 'masters';
+        $this->assertSame(0, CourseworkRequirement::mastersCoursesFor($postgraduate));
+
+        // An executive candidate is charged for the same rule in credits, so
+        // counting their courses as well would ask for it twice.
+        $executive = $this->scholar('CSED', '2024-08-20', 'executive');
+        $executive->highest_qualification = 'bachelors';
+        $this->assertSame(0, CourseworkRequirement::mastersCoursesFor($executive));
     }
 
     /** A part time scholar is in the same cohort as a full time one. */

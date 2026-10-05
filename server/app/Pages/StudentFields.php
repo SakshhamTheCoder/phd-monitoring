@@ -60,6 +60,19 @@ final class StudentFields
                 Field::select('NET/GATE', $options(['NET' => 'NET', 'GATE' => 'GATE', 'NA' => 'NA']))->key('net_gate')->value('')->from('net_gate')->open(),
             ], space: 3),
             self::row([$text('PhD Title', 'phd_title'), $text("Father's Name", 'fathers_name'), $text('Address', 'address')], space: 3),
+            // What they were admitted on. The level decides two of the institute's
+            // coursework rules, so it is a choice rather than a typed degree name:
+            // see App\Support\CourseworkRequirement.
+            self::row([
+                Field::select('Highest Qualification', $options([
+                    'bachelors' => "Bachelor's (B.E./B.Tech)",
+                    'masters' => "Master's (M.E./M.Tech/M.Sc/MBA)",
+                ]))->key('highest_qualification')->value('')->from('highest_qualification')->open(),
+                $text('Qualifying Institute', 'qualification_institute'),
+                Field::text('Qualifying Percentage')->key('qualification_percentage')->value('')
+                    ->from('qualification_percentage')->inputType('number')
+                    ->hint('Decides the executive programme credits')->open(),
+            ], space: 3),
             self::row([
                 Field::select('Current Status*', $options(['full-time' => 'Full Time', 'part-time' => 'Part Time', 'executive' => 'Executive']))
                     ->key('current_status')->value('')->from('current_status')->open(),
