@@ -20,7 +20,7 @@ return new class extends Migration {
             $table->text('publisher')->nullable();
             $table->string('volume')->nullable();
             $table->string('page_no')->nullable();
-            $table->integer('issn')->nullable();
+            $table->string('issn', 20)->nullable();
             $table->string('country')->nullable();
             $table->string('state')->nullable();
             $table->string('city')->nullable();

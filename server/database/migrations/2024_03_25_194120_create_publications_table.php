@@ -35,7 +35,7 @@ return new class extends Migration
             // page_no holds ranges like "1-18", not just integers, so it must be a string
             // (an integer column truncated those values — see the real schema).
             $table->string('page_no')->nullable();
-            $table->integer('issn')->nullable();
+            $table->string('issn', 20)->nullable();
         
 
             $table->enum('publication_type', ['journal', 'conference', 'book'])->default('journal');

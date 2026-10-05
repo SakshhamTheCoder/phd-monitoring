@@ -38,12 +38,13 @@ class SyncFacultyPublications implements ShouldQueue
 
         // Scopus runs first on purpose. It is the only source that can say a
         // paper is in a Scopus journal, so anything it returns is categorised
-        // from real data. ORCID then skips whatever Scopus already has, and its
-        // remaining works are imported without an index claim.
+        // from real data. The ORCID iD is then read through OpenAlex, which
+        // skips whatever Scopus already has and imports the rest without an
+        // index claim.
         //
         // The recorded source is the one that actually contributed records, not
-        // merely the last call that did not error. An ORCID record with nothing
-        // public on it answers 200 and imports nothing, and reporting that as
+        // merely the last call that did not error. An ORCID iD with nothing
+        // against it answers 200 and imports nothing, and reporting that as
         // "last synced from ORCID" reads as though ORCID supplied the list.
         $imported = [];
         $counts = [];
@@ -64,7 +65,7 @@ class SyncFacultyPublications implements ShouldQueue
         if ($faculty->orcid_id) {
             $attempted[] = 'orcid';
             Log::info("Sync orcid started for faculty {$faculty->faculty_code} (orcid={$faculty->orcid_id})");
-            $n = $this->syncOrcid($faculty);
+            $n = $this->syncOpenAlex($faculty);
             if ($n >= 0) {
                 $counts['orcid'] = $n;
                 if ($n > 0) $imported[] = 'orcid';
@@ -89,67 +90,225 @@ class SyncFacultyPublications implements ShouldQueue
     }
 
     /**
-     * ORCID's public record needs no credentials, only the iD.
+     * The works held against a faculty member's ORCID iD, read from OpenAlex.
+     *
+     * OpenAlex is asked rather than ORCID's own API: the same works, found by
+     * the same iD, but the listing carries the DOI, the full author list, the
+     * volume and the page range. ORCID's listing has none of those and needed
+     * one further request per work for the authors alone. Rows stay recorded
+     * as source 'orcid', because the iD is what found them.
+     *
+     * It is free and needs no key. What it cannot do is say a journal is
+     * Scopus indexed, which is why Scopus still runs first and still wins.
      */
-    private function syncOrcid(Faculty $faculty): int
+    private function syncOpenAlex(Faculty $faculty): int
     {
         try {
-            $response = Http::withHeaders(['Accept' => 'application/json'])
-                ->timeout(30)
-                ->get("https://pub.orcid.org/v3.0/{$faculty->orcid_id}/works");
-            if (!$response->successful()) {
-                Log::warning("ORCID sync failed for {$faculty->faculty_code}: HTTP " . $response->status() . " body=" . substr($response->body(), 0, 300));
-                return -1;
+            // Rows imported from ORCID's own API were keyed on its put-code,
+            // which OpenAlex cannot produce. They are the same works carrying
+            // less, so the ones nobody has edited are dropped and re-imported
+            // rather than left beside their fuller copies.
+            $dropped = FacultyPublication::where('faculty_code', $faculty->faculty_code)
+                ->where('external_id', 'LIKE', 'orcid:%')
+                ->where('manually_edited', false)
+                ->delete();
+            if ($dropped) {
+                Log::info("Sync openalex for faculty {$faculty->faculty_code}: dropped {$dropped} row(s) left by the older ORCID import");
             }
-            // DOIs already imported from Scopus, so the same paper is not listed
-            // twice under two sources. Scopus knows the journal is indexed; the
-            // ORCID copy of the same work does not, so the Scopus one wins.
-            $seenDois = FacultyPublication::where('faculty_code', $faculty->faculty_code)
-                ->where('source', 'scopus')
-                ->pluck('doi_link')
-                ->filter()
-                ->map(fn ($doi) => strtolower(trim($doi)))
-                ->all();
 
-            $groups = $response->json('group', []);
-            Log::info("Sync orcid works for faculty {$faculty->faculty_code}: ".count($groups)." groups to process");
+            // Every DOI already on the record except the ones this source owns,
+            // so a paper Scopus supplied, or one somebody edited by hand, is
+            // not imported a second time. This source's own rows are left out
+            // of the list so that re-running still refreshes them.
+            $already = FacultyPublication::where('faculty_code', $faculty->faculty_code)
+                ->where(fn ($rows) => $rows->whereNull('external_id')->orWhere('external_id', 'NOT LIKE', 'openalex:%'))
+                ->get(['doi_link', 'title']);
+
+            $seenDois = $already->pluck('doi_link')->filter()->map(fn ($doi) => $this->bareDoi($doi))->all();
+
+            // Titles as well, for the papers neither side has a DOI for. A
+            // conference paper stored from Scopus without one is in OpenAlex
+            // without one too, and comparing DOIs alone imported it a second
+            // time. Only consulted when the work has no DOI to compare on.
+            $seenTitles = $already->pluck('title')->filter()->map(fn ($title) => $this->bareTitle($title))->all();
+
+            $cursor = '*';
             $imported = 0;
+            $pages = 0;
 
-            foreach ($groups as $group) {
-                $summary = $group['work-summary'][0] ?? null;
-                if (!$summary) continue;
+            do {
+                $response = Http::withHeaders(['Accept' => 'application/json'])->timeout(30)->get(
+                    'https://api.openalex.org/works',
+                    [
+                        'filter' => 'author.orcid:' . $faculty->orcid_id,
+                        'per-page' => 200,
+                        // Cursor paging, as OpenAlex asks for anything past the
+                        // first few pages. 'meta.next_cursor' carries the next.
+                        'cursor' => $cursor,
+                        // Identifies the portal, which OpenAlex asks callers to do.
+                        'mailto' => config('mail.from.address'),
+                    ]
+                );
 
-                $doi = $this->orcidDoi($summary);
-                if ($doi && in_array(strtolower(trim($doi)), $seenDois, true)) {
-                    continue;
+                if (!$response->successful()) {
+                    Log::warning("OpenAlex sync failed for {$faculty->faculty_code}: HTTP " . $response->status() . " body=" . substr($response->body(), 0, 300));
+                    return -1;
                 }
 
-                $type = $this->orcidType($summary['type'] ?? '');
-                $venue = data_get($summary, 'journal-title.value');
+                $works = $response->json('results', []);
+                foreach ($works as $work) {
+                    if ($this->storeOpenAlexWork($faculty, $work, $seenDois, $seenTitles)) $imported++;
+                }
 
-                $this->store($faculty, [
-                    'external_id' => 'orcid:' . ($summary['put-code'] ?? ''),
-                    'source' => 'orcid',
-                    'title' => data_get($summary, 'title.title.value'),
-                    'name' => $venue,
-                    'authors' => $this->orcidAuthors($faculty, $summary['put-code'] ?? null),
-                    'year' => data_get($summary, 'publication-date.year.value'),
-                    'doi_link' => $doi,
-                    'publication_type' => $type,
-                    // ORCID carries no indexing information, so a journal article
-                    // is left unclassified rather than claimed as Scopus indexed.
-                    // A conference is placed by venue name, which is a guess and
-                    // is meant to be corrected by hand.
-                    'type' => $type === 'conference' ? $this->conferenceScope($venue) : null,
-                ]);
-                $imported++;
-            }
+                $cursor = $response->json('meta.next_cursor');
+                $pages++;
+                Log::info("Sync openalex page for faculty {$faculty->faculty_code}: page={$pages}, works=" . count($works) . ", stored={$imported}, total=" . $response->json('meta.count', 0));
+
+                // Guard against a cursor that never empties, as the Scopus loop does.
+            } while ($cursor && count($works) === 200 && $pages < 10);
+
+            $this->syncOpenAlexMetrics($faculty);
 
             return $imported;
         } catch (\Throwable $e) {
-            Log::warning("ORCID sync error for {$faculty->faculty_code}: " . $e->getMessage());
+            Log::warning("OpenAlex sync error for {$faculty->faculty_code}: " . $e->getMessage());
             return -1;
         }
+    }
+
+    /**
+     * One OpenAlex work, stored unless it is a kind this page does not list or
+     * a paper already on the record. Answers whether it was taken.
+     */
+    private function storeOpenAlexWork(Faculty $faculty, array $work, array $seenDois, array $seenTitles): bool
+    {
+        $publicationType = $this->openAlexType((string) ($work['type'] ?? ''));
+        if (!$publicationType) return false;
+
+        $doi = $work['doi'] ?? null;
+
+        if ($doi) {
+            if (in_array($this->bareDoi($doi), $seenDois, true)) return false;
+        } elseif (in_array($this->bareTitle($work['display_name'] ?? ''), $seenTitles, true)) {
+            return false;
+        }
+
+        $venue = data_get($work, 'primary_location.source.display_name');
+        $firstPage = data_get($work, 'biblio.first_page');
+        $lastPage = data_get($work, 'biblio.last_page');
+
+        $this->store($faculty, [
+            // "https://openalex.org/W2046851730" reduced to the work's own id.
+            'external_id' => 'openalex:' . basename((string) ($work['id'] ?? '')),
+            'source' => 'orcid',
+            'title' => $work['display_name'] ?? null,
+            'name' => $venue,
+            'authors' => $this->openAlexAuthors($work),
+            'year' => $work['publication_year'] ?? null,
+            'doi_link' => $doi,
+            'volume' => data_get($work, 'biblio.volume'),
+            'page_no' => $firstPage && $lastPage && $firstPage !== $lastPage ? "{$firstPage}-{$lastPage}" : ($firstPage ?: null),
+            'issn' => data_get($work, 'primary_location.source.issn_l'),
+            'publisher' => data_get($work, 'primary_location.source.host_organization_name'),
+            'publication_type' => $publicationType,
+            // OpenAlex records no Scopus listing (its source objects carry
+            // 'is_core' and 'listed_in', neither of which names Scopus), so a
+            // journal paper is left unclassified rather than claimed as
+            // indexed. Only Scopus can make that claim, and it runs first.
+            'type' => $publicationType === 'conference' ? $this->conferenceScope($venue) : null,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Citation count and h-index from OpenAlex, written only where the field
+     * has been left empty, so a number somebody typed is never replaced.
+     */
+    private function syncOpenAlexMetrics(Faculty $faculty): void
+    {
+        if ($faculty->citations !== null && $faculty->h_index !== null) return;
+
+        try {
+            $response = Http::withHeaders(['Accept' => 'application/json'])->timeout(15)->get(
+                'https://api.openalex.org/authors/orcid:' . $faculty->orcid_id,
+                ['mailto' => config('mail.from.address')]
+            );
+
+            if (!$response->successful()) return;
+
+            $citations = $response->json('cited_by_count');
+            $hIndex = $response->json('summary_stats.h_index');
+
+            if ($faculty->citations === null && $citations !== null) $faculty->citations = $citations;
+            if ($faculty->h_index === null && $hIndex !== null) $faculty->h_index = $hIndex;
+
+            if ($faculty->isDirty()) {
+                $faculty->save();
+                Log::info("Sync openalex metrics for faculty {$faculty->faculty_code}: citations={$faculty->citations}, h_index={$faculty->h_index}");
+            }
+        } catch (\Throwable $e) {
+            Log::warning("OpenAlex metrics error for faculty {$faculty->faculty_code}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Which of this page's kinds a work belongs to, or null for a kind the
+     * profile does not list: a preprint, dataset, peer review, erratum or
+     * editorial is not a publication here. OpenAlex holds no patents at all,
+     * so those stay hand entered.
+     */
+    private function openAlexType(string $type): ?string
+    {
+        return match ($type) {
+            'article', 'review' => 'journal',
+            'conference-paper' => 'conference',
+            'book', 'book-chapter', 'monograph' => 'book',
+            default => null,
+        };
+    }
+
+    /**
+     * "Bhatia T.", the style the Scopus import already writes.
+     *
+     * OpenAlex gives a display name given name first, so the last word is read
+     * as the surname. That is wrong for a surname of more than one word, which
+     * is one of the reasons a row stays editable.
+     */
+    private function openAlexAuthors(array $work): ?string
+    {
+        $names = collect(data_get($work, 'authorships', []))
+            ->map(function ($authorship) {
+                $full = trim((string) (data_get($authorship, 'author.display_name') ?: data_get($authorship, 'raw_author_name')));
+                if ($full === '') return null;
+
+                $parts = preg_split('/\s+/', $full);
+                $family = array_pop($parts);
+
+                return $parts ? $family . ' ' . mb_substr($parts[0], 0, 1) . '.' : $family;
+            })
+            ->filter()
+            ->unique()
+            ->values();
+
+        return $names->isNotEmpty() ? $names->implode(', ') : null;
+    }
+
+    /** A DOI reduced to what two records can be compared on. */
+    private function bareDoi(?string $doi): string
+    {
+        return strtolower(trim(preg_replace('#^https?://(dx\.)?doi\.org/#i', '', (string) $doi)));
+    }
+
+    /**
+     * A title reduced to what two records can be compared on, since the same
+     * paper is punctuated and capitalised differently by every source. The
+     * year is left out: a stored row often has none, and two distinct papers
+     * sharing a title word for word is rarer than that.
+     */
+    private function bareTitle(?string $title): string
+    {
+        return preg_replace('/[^a-z0-9]/', '', strtolower((string) $title));
     }
 
     private function syncScopus(Faculty $faculty): int
@@ -230,7 +389,10 @@ class SyncFacultyPublications implements ShouldQueue
                     'year' => substr($entry['prism:coverDate'] ?? '', 0, 4) ?: null,
                     'doi_link' => isset($entry['prism:doi']) ? 'https://doi.org/' . $entry['prism:doi'] : null,
                     'volume' => $entry['prism:volume'] ?? null,
-                    'issn' => isset($entry['prism:issn']) ? (int) preg_replace('/\D/', '', $entry['prism:issn']) : null,
+                    // Stored as written. The column was an integer once, which
+                    // is why this stripped the hyphen and the check digit X;
+                    // it is text now, so "1234-567X" survives.
+                    'issn' => isset($entry['prism:issn']) ? trim($entry['prism:issn']) : null,
                     'publication_type' => $publicationType,
                     // Scopus is the one source that can confirm a journal is
                     // Scopus indexed, which is what 'non-sci' means on this
@@ -311,34 +473,6 @@ class SyncFacultyPublications implements ShouldQueue
         );
     }
 
-    private function orcidDoi(array $summary): ?string
-    {
-        foreach (data_get($summary, 'external-ids.external-id', []) as $id) {
-            if (($id['external-id-type'] ?? '') === 'doi') {
-                return 'https://doi.org/' . ($id['external-id-value'] ?? '');
-            }
-        }
-        return null;
-    }
-
-    private function orcidType(string $type): string
-    {
-        // ORCID v3.0 returns lower case, hyphenated values: "journal-article",
-        // "conference-paper", "book-chapter". Matching the constant style
-        // directly never hit, so every work fell through to 'journal' and
-        // conference papers, books and patents were all filed as journal
-        // articles. Normalising first fixes that, and still matches if ORCID
-        // ever hands back the upper case form.
-        $normalised = strtoupper(str_replace('-', '_', trim($type)));
-
-        return match ($normalised) {
-            'CONFERENCE_PAPER', 'CONFERENCE_ABSTRACT', 'CONFERENCE_POSTER' => 'conference',
-            'BOOK', 'BOOK_CHAPTER', 'EDITED_BOOK' => 'book',
-            'PATENT' => 'patent',
-            default => 'journal',
-        };
-    }
-
     /**
      * Author lists via Crossref, keyed by the entry index in $entries.
      *
@@ -414,36 +548,6 @@ class SyncFacultyPublications implements ShouldQueue
         }
 
         return $entry['dc:creator'] ?? null;
-    }
-
-    /**
-     * ORCID's works listing carries no contributors, so the full record has to
-     * be fetched per work. One extra request each, which is why a failure here
-     * is swallowed: an author list is worth having but not worth losing the
-     * publication over.
-     */
-    private function orcidAuthors(Faculty $faculty, $putCode): ?string
-    {
-        if (!$putCode) return null;
-
-        try {
-            $response = Http::withHeaders(['Accept' => 'application/json'])
-                ->timeout(15)
-                ->get("https://pub.orcid.org/v3.0/{$faculty->orcid_id}/work/{$putCode}");
-
-            if (!$response->successful()) return null;
-
-            $names = collect($response->json('contributors.contributor', []))
-                ->map(fn ($contributor) => data_get($contributor, 'credit-name.value'))
-                ->filter()
-                ->unique()
-                ->values();
-
-            return $names->isNotEmpty() ? $names->implode(', ') : null;
-        } catch (\Throwable $e) {
-            Log::warning("ORCID contributors failed for work {$putCode}: " . $e->getMessage());
-            return null;
-        }
     }
 
     /**

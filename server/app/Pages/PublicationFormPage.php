@@ -75,6 +75,23 @@ final class PublicationFormPage extends PageDefinition
         return $maxMb ? $field->with(['max_mb' => $maxMb]) : $field;
     }
 
+    /**
+     * The DOI box the rest of the form is filled from, at the top because it is
+     * answered first. It searches as the DOI is pasted and offers the one
+     * record doi.org holds; picking that record fills the fields named in
+     * $fills, which are only the fields this kind asks for. A DOI with nothing
+     * registered against it offers itself alone, so it can still be entered.
+     */
+    private static function doi(array $fills): Field
+    {
+        return Field::suggest('DOI Link', '/suggestions/doi')
+            ->key('doi_link')->hint('Paste a DOI or doi.org link')
+            ->from('doi_link')->displayFrom('doi_link')
+            ->shows(['name'])
+            ->picks(['doi_link' => 'doi'] + $fills)
+            ->open();
+    }
+
     private static function submit(): array
     {
         return self::row([Field::submit('Submit')->heldWhileSending()->open()]);
@@ -85,6 +102,10 @@ final class PublicationFormPage extends PageDefinition
     private static function journal(bool $faculty): array
     {
         return array_values(array_filter([
+            self::row([self::doi([
+                'title' => 'title', 'authors' => 'authors', 'name' => 'journal',
+                'volume' => 'volume', 'page_no' => 'page_no', 'year' => 'year',
+            ])], 2),
             self::row([self::text('Author(s)', 'authors', 'Enter Author(s), separated by commas')]),
             self::row([self::years('Year of Publication/Acceptance')]),
             self::row([self::text('Title of the Paper', 'title', 'Enter Title')], 2),
@@ -95,7 +116,6 @@ final class PublicationFormPage extends PageDefinition
                 $faculty ? null : self::status('Status of Paper:', self::PUBLISHED),
             ]))),
             self::row([self::text('Impact Factor', 'impact_factor', 'Impact Factor')]),
-            self::row([self::text('DOI Link', 'doi_link', 'DOI Link')]),
             $faculty ? null : self::row([self::firstPage(15)]),
             self::submit(),
         ]));
@@ -104,6 +124,11 @@ final class PublicationFormPage extends PageDefinition
     private static function book(bool $faculty): array
     {
         return array_values(array_filter([
+            self::row([self::doi([
+                'title' => 'title', 'authors' => 'authors', 'name' => 'journal',
+                'volume' => 'volume', 'page_no' => 'page_no', 'year' => 'year',
+                'issn' => 'issn', 'publisher' => 'publisher',
+            ])], 2),
             self::row([self::text('Author(s)', 'authors', 'Enter Author(s),separated by commas')]),
             self::row([self::text('Name of Book', 'name', 'Book Name')], 2),
             self::row(array_values(array_filter([
@@ -117,7 +142,6 @@ final class PublicationFormPage extends PageDefinition
                 self::text('ISSN', 'issn', 'ISSN'),
             ]),
             self::row([self::text('Name of Publisher', 'publisher', 'Publisher Name')], 2),
-            self::row([self::text('DOI Link', 'doi_link', 'DOI Link')]),
             $faculty ? null : self::row([self::firstPage(15)]),
             self::submit(),
         ]));
@@ -131,6 +155,9 @@ final class PublicationFormPage extends PageDefinition
             ->key($key)->hint($label)->from($key)->displayFrom($key)->picks($picks)->with(['params_from_answers' => true])->open();
 
         return array_values(array_filter([
+            self::row([self::doi([
+                'title' => 'title', 'authors' => 'authors', 'name' => 'journal', 'year' => 'year',
+            ])], 2),
             self::row([self::text('Author(s)', 'authors', 'Enter Author(s)')]),
             self::row([self::years('Year of Publication/Acceptance')]),
             self::row([self::text('Title of the Paper', 'title', 'Enter Title')], 2),
@@ -148,7 +175,6 @@ final class PublicationFormPage extends PageDefinition
                 self::choice('Mode of Conference', 'mode', [['title' => 'Offline', 'value' => 'offline'], ['title' => 'Online', 'value' => 'online']]),
                 self::text('Funding Received', 'funding', 'Funding source, if any'),
             ]) : null,
-            self::row([self::text('DOI Link', 'doi_link', 'DOI Link')]),
             $faculty ? null : self::row([self::firstPage(15)]),
             self::submit(),
         ]));
@@ -157,6 +183,9 @@ final class PublicationFormPage extends PageDefinition
     private static function patents(bool $faculty): array
     {
         return array_values(array_filter([
+            // A plain box, not the lookup the other kinds get: a patent number
+            // is not a DOI, so there is nothing for doi.org to answer with.
+            self::row([self::text('DOI Link', 'doi_link', 'DOI Link')]),
             self::row([self::text('Author(s)', 'authors', 'Enter Author(s)')]),
             self::row([self::years('Year of Award')]),
             self::row([self::text('Title of the Patent', 'title', 'Enter Title')], 2),
@@ -164,7 +193,6 @@ final class PublicationFormPage extends PageDefinition
                 self::choice('Type of Patent', 'country', [['title' => 'National', 'value' => 'National'], ['title' => 'International', 'value' => 'International']]),
                 $faculty ? null : self::status('Status of Patent:', [['title' => 'Granted', 'value' => 'granted'], ['title' => 'Filed', 'value' => 'filed'], ['title' => 'Published', 'value' => 'published']]),
             ]))),
-            self::row([self::text('DOI Link', 'doi_link', 'DOI Link')]),
             $faculty ? null : self::row([self::firstPage(null)]),
             self::submit(),
         ]));
