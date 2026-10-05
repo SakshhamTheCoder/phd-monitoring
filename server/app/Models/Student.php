@@ -37,6 +37,9 @@ class Student extends Model
         'strengths',
         'help_needed',
         'overall_progress',
+        'highest_qualification',
+        'qualification_institute',
+        'qualification_percentage',
     ];
 
     protected $casts = [
@@ -123,15 +126,36 @@ class Student extends Model
             ->sum('courses.credits');
     }
 
+    /**
+     * Masters level courses the scholar has passed, counted rather than summed:
+     * the rule for a B.E. or B.Tech entrant is eight courses, not a credit
+     * total. A course nobody has given a level to is not one of them.
+     */
+    public function completedMastersCourses(): int
+    {
+        return StudentCourse::where('student_id', $this->roll_no)
+            ->where('student_courses.status', 'completed')
+            ->join('courses', 'courses.id', '=', 'student_courses.course_id')
+            ->where('courses.level', 'masters')
+            ->count();
+    }
+
     /** The credits this scholar's cohort requires before a synopsis. */
     public function requiredCredits(): int
     {
         return \App\Support\CourseworkRequirement::for($this);
     }
 
+    /** The masters level courses their entry qualification requires, if any. */
+    public function requiredMastersCourses(): int
+    {
+        return \App\Support\CourseworkRequirement::mastersCoursesFor($this);
+    }
+
     public function hasFinishedCoursework(): bool
     {
-        return $this->completedCredits() >= $this->requiredCredits();
+        return $this->completedCredits() >= $this->requiredCredits()
+            && $this->completedMastersCourses() >= $this->requiredMastersCourses();
     }
 
     public function isSupervisorAllocated(): bool

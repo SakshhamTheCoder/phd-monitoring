@@ -163,6 +163,10 @@ final class CoursesPage extends PageDefinition
             $text('Course Code', 'course_code', 'e.g., CS101'),
             $text('Course Name', 'course_name', 'e.g., Introduction to Computer Science'),
             $text('Credits', 'credits', 'e.g., 3')->inputType('number'),
+            // Counted towards the eight masters level courses a B.E. or B.Tech
+            // entrant owes. Left unset until somebody says which it is.
+            Field::select('Level', [['value' => 'masters', 'title' => 'Masters'], ['value' => 'doctoral', 'title' => 'Doctoral']])
+                ->key('level')->value('')->from('level')->open(),
             // Posted either way, as the page always sent it; only admin picks it.
             $picksDepartment
                 ? Field::select('Department', Department::orderBy('name')->get()->map(fn ($department) => ['title' => $department->name, 'value' => $department->id])->all())

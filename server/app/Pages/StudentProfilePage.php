@@ -152,6 +152,20 @@ final class StudentProfilePage extends PageDefinition
             ['label' => 'CGPA', 'value' => $profile['cgpa'], 'field' => 'cgpa'],
             // What the synopsis waits on; the required figure is set per status by an admin.
             ['label' => 'Coursework', 'boxed' => ($profile['completed_credits'] ?? 0) . " of {$profile['required_credits']} credits"],
+            // Only for a B.E. or B.Tech entrant, who owes eight masters level
+            // courses as well as the credits. Everyone else is required none,
+            // and a line reading "0 of 0" would say nothing.
+            ($profile['required_masters_courses'] ?? 0) > 0
+                ? ['label' => 'Masters Level Courses', 'boxed' => ($profile['completed_masters_courses'] ?? 0) . " of {$profile['required_masters_courses']}"]
+                : null,
+            // What they were admitted on, which decides the two rules above.
+            ['label' => 'Highest Qualification', 'value' => match ($profile['highest_qualification'] ?? null) {
+                'bachelors' => "Bachelor's (B.E./B.Tech)",
+                'masters' => "Master's",
+                default => null,
+            }],
+            ['label' => 'Qualifying Institute', 'value' => $profile['qualification_institute'] ?? null],
+            ['label' => 'Qualifying Percentage', 'value' => ($profile['qualification_percentage'] ?? null) === null ? null : $profile['qualification_percentage'] . '%'],
             ['label' => "Father's Name", 'value' => $profile['fathers_name'], 'field' => 'fathers_name'],
             ['label' => 'Address', 'value' => $profile['address'], 'field' => 'address'],
             ['label' => 'Current Status', 'value' => $profile['current_status']],
