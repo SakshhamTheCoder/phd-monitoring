@@ -148,6 +148,43 @@ class DepartmentController extends Controller
         ], 200);
     }
 
+    /**
+     * Rename a department or change its code. Everything that points at a
+     * department does so by id, so nothing else moves; only spreadsheets that
+     * name the old code stop matching, which the page says before it saves.
+     */
+    public function update(Request $request, $id)
+    {
+        if (!Auth::user()->may('can_add_department')) {
+            return response()->json(['message' => 'You do not have permission to edit departments'], 403);
+        }
+
+        $department = \App\Models\Department::find($id);
+        if (!$department) {
+            return response()->json(['message' => 'Department not found'], 404);
+        }
+
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:100',
+        ]);
+        $name = trim($data['name']);
+        $code = trim($data['code']);
+
+        $taken = \App\Models\Department::where('id', '!=', $department->id)
+            ->whereRaw('lower(code) = ?', [mb_strtolower($code)])
+            ->exists();
+        if ($taken) {
+            return response()->json(['message' => "Another department already uses the code {$code}"], 422);
+        }
+
+        $department->name = $name;
+        $department->code = $code;
+        $department->save();
+
+        return response()->json(['message' => 'Department updated'], 200);
+    }
+
     public function addAreaOfSpecialization(Request $request)
     {
         try {
