@@ -4,13 +4,14 @@ import { useLoading } from '../../context/LoadingContext';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import AdminHome from '../../components/profileCard/AdminHome';
+import OverviewDashboard from '../../components/overview/OverviewDashboard';
 import ServerRecordPage from '../../components/serverPage/ServerRecordPage';
 import { currentRole } from '../../auth/access';
 import LoadError from '../../components/common/LoadError';
 
 const Dashboard = () => {
   const userRole = currentRole();
-  const [view, setView] = useState(null); // 'student' | 'faculty' | 'admin'
+  const [view, setView] = useState(null); // 'student' | 'faculty' | 'admin' | 'overview'
   const { setLoading } = useLoading();
   const [data, setData] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -41,10 +42,11 @@ const Dashboard = () => {
   }, [setLoading]);
 
   useEffect(() => {
-    // Admin / clerk accounts have no personal (student/faculty) profile, and /home 404s for
-    // them — which surfaces an error toast. Skip the call entirely and show the
-    // overview built from what we already have in localStorage.
-    if (userRole === 'admin' || userRole === 'clerk') {
+    // A clerk has no personal (student/faculty) profile, so skip the call and
+    // show the quick-access home built from what we already have. The admin
+    // asks: /home answers with the overview for the roles listed in
+    // server/config/dashboard.php, and with the quick-access home otherwise.
+    if (userRole === 'clerk') {
       setView('admin');
       setIsLoaded(true);
       return;
@@ -70,6 +72,8 @@ const Dashboard = () => {
             <ServerRecordPage page="student-profile" loadingTitle="Loading profile" failedMessage="Could not load this profile. Check your connection and try again." />
           ) : view === 'ug_student' ? (
             <ServerRecordPage page="ug-profile" failedMessage="Could not load your profile. Check your connection and try again." />
+          ) : view === 'overview' ? (
+            <OverviewDashboard data={data} />
           ) : view === 'admin' ? (
             <AdminHome data={data} />
           ) : (
