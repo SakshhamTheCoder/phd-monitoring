@@ -615,6 +615,10 @@ class PresentationController extends Controller
                         continue;
                     }
 
+                    // A finished evaluation has travelled its whole chain. Left at
+                    // step 0 it reads as one that has not reached the DORDC, HoD or
+                    // committee yet, and their lists (onlyFormsReachedBy) hide it.
+                    $chain = ['student', 'faculty', 'doctoral', 'hod', 'dordc', 'complete'];
                     $presentation = Presentation::create([
                         'student_id' => $student->roll_no,
                         'date' => $row['date'] ?: null,
@@ -626,7 +630,9 @@ class PresentationController extends Controller
                         'overall_progress' => 'satisfactory',
                         'status' => 'approved',
                         'completion' => 'complete',
-                        'steps' => ['student', 'faculty', 'doctoral', 'hod', 'dordc', 'complete'],
+                        'steps' => $chain,
+                        'current_step' => count($chain) - 1,
+                        'maximum_step' => count($chain) - 1,
                     ]);
 
                     $presentation->addHistoryEntry('Imported from progress sheet', $user->first_name);
