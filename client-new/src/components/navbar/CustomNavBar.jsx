@@ -45,11 +45,13 @@ const CustomNavBar = () => {
                         aria-hidden="true"
                     />
                 )}
-                {visibleButtons.map(({ path, icon, label: text }, index) => {
+                {visibleButtons.map(({ path, icon, label: text, group }, index) => {
                     const isActive = index === activeIndex;
+                    const heading = group && group !== visibleButtons[index - 1]?.group ? group : null;
                     return (
+                        <React.Fragment key={`${path}-${text}`}>
+                        {heading && <div className="menu-heading" role="presentation">{heading}</div>}
                         <button
-                            key={`${path}-${text}`}
                             type="button"
                             className={`menu-button ${isActive ? 'active' : ''}`}
                             aria-current={isActive ? 'page' : undefined}
@@ -58,6 +60,7 @@ const CustomNavBar = () => {
                             <span className="icon"><i className={`fa fa-${icon}`} aria-hidden="true" /></span>
                             <span className="text">{text}</span>
                         </button>
+                        </React.Fragment>
                     );
                 })}
             </div>
