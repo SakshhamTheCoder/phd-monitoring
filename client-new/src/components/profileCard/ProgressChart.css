@@ -1,74 +1,118 @@
-.progress-chart {
-    margin: 0;
-}
+.progress-chart { margin: 0; }
+.progress-chart-frame { position: relative; }
 
 .progress-chart-svg {
     width: 100%;
     height: auto;
     display: block;
     overflow: visible;
+    font-family: 'Poppins', sans-serif;
+    min-width: 0;
 }
 
 /* Grid and ticks locate the line; they are not competing with it. */
-.progress-chart-grid {
-    stroke: var(--border-subtle);
-    stroke-width: 1;
-}
+.progress-chart-grid { stroke: var(--border-subtle); stroke-width: 1; }
+.progress-chart-tick { fill: var(--text-muted); font-size: 11px; }
 
-.progress-chart-tick {
-    fill: var(--text-muted);
-    font-size: 11px;
-}
+/* A key date is an annotation, not a second series: grey and dashed. */
+.progress-chart-milestone { stroke: var(--border-color); stroke-width: 1; stroke-dasharray: 3 4; }
+.progress-chart-milestone-label { fill: var(--text-muted); font-size: 11px; font-weight: 500; }
 
-/* A milestone is an annotation, not a second series, so it stays grey and
-   dashed. Giving it a colour would read as data it is not. */
-.progress-chart-milestone {
-    stroke: var(--border-color);
-    stroke-width: 1;
-    stroke-dasharray: 3 4;
-}
-
-.progress-chart-milestone-label {
-    fill: var(--text-muted);
-    font-size: 11px;
-}
-
+.progress-chart-area { pointer-events: none; }
 .progress-chart-line {
-    stroke: var(--primary-color);
-    stroke-width: 2;
+    stroke: #B22626;
+    stroke-width: 2.5;
     stroke-linejoin: round;
     stroke-linecap: round;
 }
-
-/* The surface ring keeps a point legible where the line runs under it. */
 .progress-chart-point {
-    fill: var(--primary-color);
-    stroke: var(--surface);
+    fill: #B22626;
+    stroke: var(--surface, #fff);
     stroke-width: 2;
-    cursor: pointer;
+    pointer-events: none;
     transition: r 150ms ease-out;
 }
+.progress-chart-halo { fill: rgba(178, 38, 38, 0.15); pointer-events: none; }
+.progress-chart-guide { stroke: #B22626; stroke-opacity: 0.35; stroke-width: 1; pointer-events: none; }
+.progress-chart-latest { fill: #B22626; font-size: 12px; font-weight: 600; pointer-events: none; }
+.progress-chart-hit { fill: transparent; stroke: none; cursor: pointer; outline: none; }
+.progress-chart-hit:focus-visible { stroke: #B22626; stroke-width: 2; stroke-opacity: 0.6; }
 
-.progress-chart-point:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
+.progress-chart-tooltip {
+    position: absolute;
+    transform: translate(12px, -100%);
+    background: var(--surface, #fff);
+    color: var(--text-color, #222);
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    padding: 8px 10px;
+    font-size: 12px;
+    line-height: 1.4;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 2;
+}
+.progress-chart-tooltip.is-flipped { transform: translate(calc(-100% - 12px), -100%); }
+.progress-chart-tooltip-title { font-weight: 600; }
+.progress-chart-tooltip-value { font-size: 16px; font-weight: 600; color: #B22626; }
+.progress-chart-tooltip-row { color: var(--text-muted); }
+
+/* Key dates: always listed, whether or not they fall on the axis. */
+.progress-chart-dates {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.progress-chart-dates li {
+    display: inline-flex;
+    gap: 8px;
+    align-items: baseline;
+    padding: 4px 10px;
+    border: 1px solid var(--border-subtle, #eee);
+    border-radius: 999px;
+    font-size: 12px;
+}
+.progress-chart-dates-label { font-weight: 600; color: var(--text-color, #222); }
+.progress-chart-dates-value { color: var(--text-muted); }
+
+/* A single evaluation, shown as a reading. */
+.progress-chart-reading { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.progress-chart-reading-value { font-size: 44px; font-weight: 600; line-height: 1; color: #B22626; }
+.progress-chart-reading-meta { font-size: 14px; color: var(--text-color, #222); line-height: 1.5; }
+.progress-chart-reading-date { color: var(--text-muted); font-size: 13px; }
+.progress-chart-bar {
+    margin-top: 16px;
+    height: 12px;
+    border-radius: 999px;
+    background: var(--border-subtle, #eee);
+    overflow: hidden;
+}
+.progress-chart-bar-fill { height: 100%; border-radius: 999px; background: #B22626; }
+.progress-chart-bar-scale {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
 }
 
 .progress-chart-caption {
-    margin-top: 8px;
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    min-height: 1.4em;
-}
-
-.progress-chart-empty {
-    margin: 0;
+    margin-top: 12px;
     font-size: var(--text-sm);
     color: var(--text-muted);
 }
+.progress-chart-empty { margin: 0; font-size: var(--text-sm); color: var(--text-muted); }
 
 @media (prefers-reduced-motion: reduce) {
-    .progress-chart-point {
-        transition: none;
-    }
+    .progress-chart-point { transition: none; }
+}
+
+@media (max-width: 520px) {
+    .progress-chart-tick, .progress-chart-milestone-label { font-size: 13px; }
+    .progress-chart-latest { font-size: 14px; }
+    .progress-chart-reading-value { font-size: 36px; }
 }
