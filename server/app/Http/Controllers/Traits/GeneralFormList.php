@@ -69,7 +69,10 @@ trait GeneralFormList
                 $response = $this->listDoctoralForms($user, $model, $filters, $override, $page, $rows, $fields, $trusted);
                 break;
             default:
-                return $this->refuse();
+                if (!in_array($role, config('roles.read_all_forms', []), true)) {
+                    return $this->refuse();
+                }
+                $response = $this->listAdminForms($user, $model, $filters, $page, $rows, $fields, $trusted);
         }
 
         // Whether this reader may approve several at once: the controller's own
@@ -103,7 +106,7 @@ trait GeneralFormList
      */
     private function onlyFormsReachedBy($formsQuery, string $formsTable, string $role): void
     {
-        if ($role === 'admin' || $role === 'adordc') {
+        if (in_array($role, config('roles.read_all_forms', []), true)) {
             return;
         }
 
@@ -125,7 +128,7 @@ trait GeneralFormList
     /** onlyFormsReachedBy() for one loaded form. */
     private function formReachedBy($form, string $role): bool
     {
-        if ($role === 'admin' || $role === 'adordc') {
+        if (in_array($role, config('roles.read_all_forms', []), true)) {
             return true;
         }
 

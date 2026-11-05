@@ -25,4 +25,18 @@ return [
 
     'enforce_backing' => env('ROLE_BACKING_ENFORCE', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Roles that read every form
+    |--------------------------------------------------------------------------
+    |
+    | These roles hold no step in a form's chain, so the lists would show them
+    | nothing. They read every form, finished or not, and approve none. Adding a
+    | role here (a future 'vc', say) is what makes it see the form lists such as
+    | a scholar's progress monitoring table.
+    |
+    */
+
+    'read_all_forms' => ['admin', 'adordc'],
+
 ];
