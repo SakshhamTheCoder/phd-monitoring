@@ -88,6 +88,21 @@ class ProgressHistoryImportTest extends TestCase
         $this->assertSame(55.0, (float) $student->fresh()->overall_progress);
     }
 
+    public function test_an_imported_evaluation_is_listed_to_the_dordc(): void
+    {
+        $this->actAs('admin');
+        $student = $this->freshScholar();
+        $this->import([$this->row($student, '2324ODD', 20, 2)])->assertStatus(200);
+
+        $presentation = Presentation::where('student_id', $student->roll_no)->firstOrFail();
+        $this->assertSame(count($presentation->steps) - 1, $presentation->maximum_step);
+
+        $this->actAs('dordc');
+        $this->getJson("/api/students/{$student->roll_no}/forms/presentation")
+            ->assertOk()
+            ->assertJsonPath('total', 1);
+    }
+
     public function test_reloading_the_same_file_adds_nothing(): void
     {
         $this->actAs('admin');
