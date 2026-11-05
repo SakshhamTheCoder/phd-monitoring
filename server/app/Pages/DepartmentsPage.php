@@ -30,7 +30,7 @@ final class DepartmentsPage extends PageDefinition
                 'search' => ['path' => '/departments'],
                 'opens' => $manages ? ['dialog' => 'manage'] : null,
                 'actions' => $manages ? [
-                    ['label' => 'Manage HOD and coordinators', 'icon' => 'fa fa-users', 'opens' => 'manage'],
+                    ['label' => 'Edit department', 'icon' => 'fa fa-users', 'opens' => 'manage'],
                 ] : [],
             ], fn ($value) => $value !== null),
             'dialogs' => $manages ? [
