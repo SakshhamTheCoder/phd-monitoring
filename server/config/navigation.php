@@ -58,30 +58,35 @@ return [
         'admin' => ['admin', 'dordc'],
     ],
 
+    // Drawn in this order; `group` is the heading a run of entries sits under
+    // (none for the loose entries at the top). A group with nothing visible to a
+    // role draws no heading.
     'nav' => [
         // A UG student's home is their profile, so it is named for what it shows.
         ['path' => '/home', 'icon' => 'user', 'label' => 'Profile', 'roles' => ['ug_student']],
         ['path' => '/home', 'icon' => 'home', 'label' => 'Home', 'area' => 'home', 'except' => ['ug_student']],
-        ['path' => '/projects', 'icon' => 'briefcase', 'label' => 'Projects', 'area' => 'projects', 'feature' => 'project_management'],
-        ['path' => '/forms', 'icon' => 'file-text', 'label' => 'Forms', 'area' => 'home'],
-        ['path' => '/presentation', 'icon' => 'tasks', 'label' => 'Progress Monitoring', 'area' => 'presentations'],
-        ['path' => '/publications', 'icon' => 'book', 'label' => 'Publications', 'area' => 'publications'],
-        // The office owns the page and a mentor reaches it while they mentor.
-        ['path' => '/urf', 'icon' => 'flask', 'label' => 'URF', 'area' => 'urf', 'capability' => ['can_manage_urf', 'can_read_urf_mentees']],
-        ['path' => '/openings', 'icon' => 'bullhorn', 'label' => 'Openings', 'area' => 'openings', 'feature' => 'job_openings'],
-        ['path' => '/courses', 'icon' => 'graduation-cap', 'label' => 'Courses', 'area' => 'courses'],
-        ['path' => '/students', 'icon' => 'users', 'label' => 'Students', 'area' => 'scholars'],
-        ['path' => '/faculty', 'icon' => 'id-badge', 'label' => 'Faculty', 'area' => 'facultyDirectory'],
-        ['path' => '/clerks', 'icon' => 'id-card-o', 'label' => 'Clerks', 'area' => 'admin'],
-        ['path' => '/departments', 'icon' => 'building', 'label' => 'Departments', 'area' => 'departments'],
-        ['path' => '/supervisor-doctoral-approvals', 'icon' => 'user-plus', 'label' => 'Supervisor Approvals', 'area' => 'supervisorApprovals'],
-        ['path' => '/attendance', 'icon' => 'calendar-check-o', 'label' => 'Attendance', 'area' => 'attendance'],
-        ['path' => '/configuration', 'icon' => 'sliders', 'label' => 'Configuration', 'area' => 'admin'],
-        ['path' => '/logs', 'icon' => 'history', 'label' => 'Logs', 'area' => 'admin'],
-        ['path' => '/users', 'icon' => 'cogs', 'label' => 'Manage Users', 'area' => 'admin'],
         ['path' => '/notifications', 'icon' => 'bell', 'label' => 'Notifications', 'area' => 'notifications'],
-        ['path' => '/areasOfSpecialization', 'icon' => 'list', 'label' => 'Areas of Specialization', 'area' => 'areasOfSpecialization'],
-        ['path' => '/outside-experts', 'icon' => 'user-o', 'label' => 'Outside Experts', 'area' => 'admin'],
+
+        ['group' => 'Academics', 'path' => '/students', 'icon' => 'users', 'label' => 'Students', 'area' => 'scholars'],
+        ['group' => 'Academics', 'path' => '/faculty', 'icon' => 'id-badge', 'label' => 'Faculty', 'area' => 'facultyDirectory'],
+        ['group' => 'Academics', 'path' => '/clerks', 'icon' => 'id-card-o', 'label' => 'Clerks', 'area' => 'admin'],
+        ['group' => 'Academics', 'path' => '/urf', 'icon' => 'flask', 'label' => 'URF', 'area' => 'urf', 'capability' => ['can_manage_urf', 'can_read_urf_mentees']],
+        ['group' => 'Academics', 'path' => '/projects', 'icon' => 'briefcase', 'label' => 'Projects', 'area' => 'projects', 'feature' => 'project_management'],
+        ['group' => 'Academics', 'path' => '/forms', 'icon' => 'file-text', 'label' => 'Forms', 'area' => 'home'],
+        ['group' => 'Academics', 'path' => '/presentation', 'icon' => 'tasks', 'label' => 'Progress Monitoring', 'area' => 'presentations'],
+        ['group' => 'Academics', 'path' => '/attendance', 'icon' => 'calendar-check-o', 'label' => 'Attendance', 'area' => 'attendance'],
+
+        ['group' => 'Research', 'path' => '/publications', 'icon' => 'book', 'label' => 'Publications', 'area' => 'publications'],
+        ['group' => 'Research', 'path' => '/openings', 'icon' => 'bullhorn', 'label' => 'Openings', 'area' => 'openings', 'feature' => 'job_openings'],
+
+        ['group' => 'Manage', 'path' => '/courses', 'icon' => 'graduation-cap', 'label' => 'Courses', 'area' => 'courses'],
+        ['group' => 'Manage', 'path' => '/departments', 'icon' => 'building', 'label' => 'Departments', 'area' => 'departments'],
+        ['group' => 'Manage', 'path' => '/areasOfSpecialization', 'icon' => 'list', 'label' => 'Areas of Specialization', 'area' => 'areasOfSpecialization'],
+        ['group' => 'Manage', 'path' => '/supervisor-doctoral-approvals', 'icon' => 'user-plus', 'label' => 'Supervisor Approvals', 'area' => 'supervisorApprovals'],
+        ['group' => 'Manage', 'path' => '/outside-experts', 'icon' => 'user-o', 'label' => 'Outside Experts', 'area' => 'admin'],
+        ['group' => 'Manage', 'path' => '/users', 'icon' => 'cogs', 'label' => 'Manage Users', 'area' => 'admin'],
+        ['group' => 'Manage', 'path' => '/configuration', 'icon' => 'sliders', 'label' => 'Configuration', 'area' => 'admin'],
+        ['group' => 'Manage', 'path' => '/logs', 'icon' => 'history', 'label' => 'Logs', 'area' => 'admin'],
     ],
 
     // The office home's quick links: the part of the sidebar worth a tile, with

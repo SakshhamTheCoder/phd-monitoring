@@ -54,7 +54,7 @@ final class Navigation
             && (empty($entry['feature']) || ($features[$entry['feature']] ?? true))
             && (empty($entry['capability']) || collect((array) $entry['capability'])->contains(fn ($name) => !empty($capabilities[$name])));
 
-        $item = fn (array $entry) => ['path' => $entry['path'], 'label' => $entry['label'], 'icon' => $entry['icon']];
+        $item = fn (array $entry) => ['path' => $entry['path'], 'label' => $entry['label'], 'icon' => $entry['icon'], 'group' => $entry['group'] ?? null];
 
         // A page is named by its menu entry for this role, whether or not it is
         // shown just now (a switched-off module still names its page).
