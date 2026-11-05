@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Student;
 use App\Models\Faculty;
+use App\Support\OverviewDashboard;
 
 class HomeController extends Controller
 {
@@ -13,6 +14,20 @@ class HomeController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role->role;
+
+        // Office roles listed in config/dashboard.php land on the overview,
+        // whether or not they also hold a faculty record.
+        if (OverviewDashboard::appliesTo($role)) {
+            return response()->json([
+                'type' => 'overview',
+                'data' => [
+                    'name' => $user->name(),
+                    'email' => $user->email,
+                    'role' => $role,
+                    ...OverviewDashboard::build(),
+                ],
+            ]);
+        }
 
         if ($role === 'student') {
             $student = Student::with(['user', 'department', 'supervisors.user', 'doctoralCommittee.user'])
