@@ -1409,7 +1409,6 @@ class StudentController extends Controller {
             // Marked on the same axis, so the progress line can be read against
             // what the scholar was doing at the time.
             'milestones' => collect([
-                ['label' => 'Admission', 'date' => $student->date_of_registration],
                 ['label' => 'IRB', 'date' => $student->date_of_irb],
                 ['label' => 'Synopsis', 'date' => $student->date_of_synopsis],
                 ['label' => 'Thesis', 'date' => $student->date_of_thesis],
