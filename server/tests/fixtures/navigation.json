@@ -84,113 +84,131 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/projects",
-                    "label": "Projects",
-                    "icon": "briefcase"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/courses",
-                    "label": "Courses",
-                    "icon": "graduation-cap"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
-                },
-                {
-                    "path": "\/clerks",
-                    "label": "Clerks",
-                    "icon": "id-card-o"
-                },
-                {
-                    "path": "\/departments",
-                    "label": "Departments",
-                    "icon": "building"
-                },
-                {
-                    "path": "\/supervisor-doctoral-approvals",
-                    "label": "Supervisor Approvals",
-                    "icon": "user-plus"
-                },
-                {
-                    "path": "\/attendance",
-                    "label": "Attendance",
-                    "icon": "calendar-check-o"
-                },
-                {
-                    "path": "\/configuration",
-                    "label": "Configuration",
-                    "icon": "sliders"
-                },
-                {
-                    "path": "\/logs",
-                    "label": "Logs",
-                    "icon": "history"
-                },
-                {
-                    "path": "\/users",
-                    "label": "Manage Users",
-                    "icon": "cogs"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/clerks",
+                    "label": "Clerks",
+                    "icon": "id-card-o",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building",
+                    "group": "Manage"
                 },
                 {
                     "path": "\/areasOfSpecialization",
                     "label": "Areas of Specialization",
-                    "icon": "list"
+                    "icon": "list",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/supervisor-doctoral-approvals",
+                    "label": "Supervisor Approvals",
+                    "icon": "user-plus",
+                    "group": "Manage"
                 },
                 {
                     "path": "\/outside-experts",
                     "label": "Outside Experts",
-                    "icon": "user-o"
+                    "icon": "user-o",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/users",
+                    "label": "Manage Users",
+                    "icon": "cogs",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/configuration",
+                    "label": "Configuration",
+                    "icon": "sliders",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/logs",
+                    "label": "Logs",
+                    "icon": "history",
+                    "group": "Manage"
                 }
             ],
             "labels": {
                 "\/home": "Home",
-                "\/projects": "Projects",
-                "\/forms": "Forms",
-                "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
-                "\/courses": "Courses",
+                "\/notifications": "Notifications",
                 "\/students": "Students",
                 "\/faculty": "Faculty",
                 "\/clerks": "Clerks",
-                "\/departments": "Departments",
-                "\/supervisor-doctoral-approvals": "Supervisor Approvals",
+                "\/urf": "URF",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
                 "\/attendance": "Attendance",
-                "\/configuration": "Configuration",
-                "\/logs": "Logs",
-                "\/users": "Manage Users",
-                "\/notifications": "Notifications",
+                "\/courses": "Courses",
+                "\/departments": "Departments",
                 "\/areasOfSpecialization": "Areas of Specialization",
-                "\/outside-experts": "Outside Experts"
+                "\/supervisor-doctoral-approvals": "Supervisor Approvals",
+                "\/outside-experts": "Outside Experts",
+                "\/users": "Manage Users",
+                "\/configuration": "Configuration",
+                "\/logs": "Logs"
             },
             "tiles": [
                 {
@@ -366,108 +384,125 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/courses",
-                    "label": "Courses",
-                    "icon": "graduation-cap"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
-                },
-                {
-                    "path": "\/clerks",
-                    "label": "Clerks",
-                    "icon": "id-card-o"
-                },
-                {
-                    "path": "\/departments",
-                    "label": "Departments",
-                    "icon": "building"
-                },
-                {
-                    "path": "\/supervisor-doctoral-approvals",
-                    "label": "Supervisor Approvals",
-                    "icon": "user-plus"
-                },
-                {
-                    "path": "\/attendance",
-                    "label": "Attendance",
-                    "icon": "calendar-check-o"
-                },
-                {
-                    "path": "\/configuration",
-                    "label": "Configuration",
-                    "icon": "sliders"
-                },
-                {
-                    "path": "\/logs",
-                    "label": "Logs",
-                    "icon": "history"
-                },
-                {
-                    "path": "\/users",
-                    "label": "Manage Users",
-                    "icon": "cogs"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/clerks",
+                    "label": "Clerks",
+                    "icon": "id-card-o",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building",
+                    "group": "Manage"
                 },
                 {
                     "path": "\/areasOfSpecialization",
                     "label": "Areas of Specialization",
-                    "icon": "list"
+                    "icon": "list",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/supervisor-doctoral-approvals",
+                    "label": "Supervisor Approvals",
+                    "icon": "user-plus",
+                    "group": "Manage"
                 },
                 {
                     "path": "\/outside-experts",
                     "label": "Outside Experts",
-                    "icon": "user-o"
+                    "icon": "user-o",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/users",
+                    "label": "Manage Users",
+                    "icon": "cogs",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/configuration",
+                    "label": "Configuration",
+                    "icon": "sliders",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/logs",
+                    "label": "Logs",
+                    "icon": "history",
+                    "group": "Manage"
                 }
             ],
             "labels": {
                 "\/home": "Home",
-                "\/projects": "Projects",
-                "\/forms": "Forms",
-                "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
-                "\/courses": "Courses",
+                "\/notifications": "Notifications",
                 "\/students": "Students",
                 "\/faculty": "Faculty",
                 "\/clerks": "Clerks",
-                "\/departments": "Departments",
-                "\/supervisor-doctoral-approvals": "Supervisor Approvals",
+                "\/urf": "URF",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
                 "\/attendance": "Attendance",
-                "\/configuration": "Configuration",
-                "\/logs": "Logs",
-                "\/users": "Manage Users",
-                "\/notifications": "Notifications",
+                "\/courses": "Courses",
+                "\/departments": "Departments",
                 "\/areasOfSpecialization": "Areas of Specialization",
-                "\/outside-experts": "Outside Experts"
+                "\/supervisor-doctoral-approvals": "Supervisor Approvals",
+                "\/outside-experts": "Outside Experts",
+                "\/users": "Manage Users",
+                "\/configuration": "Configuration",
+                "\/logs": "Logs"
             },
             "tiles": [
                 {
@@ -638,64 +673,74 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/projects",
-                    "label": "Projects",
-                    "icon": "briefcase"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/courses",
-                    "label": "Courses",
-                    "icon": "graduation-cap"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap",
+                    "group": "Manage"
                 },
                 {
                     "path": "\/areasOfSpecialization",
                     "label": "Areas of Specialization",
-                    "icon": "list"
+                    "icon": "list",
+                    "group": "Manage"
                 }
             ],
             "labels": {
                 "\/home": "Home",
+                "\/notifications": "Notifications",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/urf": "URF",
                 "\/projects": "Projects",
                 "\/forms": "Forms",
                 "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
                 "\/courses": "Courses",
-                "\/students": "Students",
-                "\/faculty": "Faculty",
-                "\/notifications": "Notifications",
                 "\/areasOfSpecialization": "Areas of Specialization"
             },
             "tiles": [
@@ -827,59 +872,68 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/courses",
-                    "label": "Courses",
-                    "icon": "graduation-cap"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap",
+                    "group": "Manage"
                 },
                 {
                     "path": "\/areasOfSpecialization",
                     "label": "Areas of Specialization",
-                    "icon": "list"
+                    "icon": "list",
+                    "group": "Manage"
                 }
             ],
             "labels": {
                 "\/home": "Home",
+                "\/notifications": "Notifications",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/urf": "URF",
                 "\/projects": "Projects",
                 "\/forms": "Forms",
                 "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
                 "\/courses": "Courses",
-                "\/students": "Students",
-                "\/faculty": "Faculty",
-                "\/notifications": "Notifications",
                 "\/areasOfSpecialization": "Areas of Specialization"
             },
             "tiles": [
@@ -1006,70 +1060,81 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/projects",
-                    "label": "Projects",
-                    "icon": "briefcase"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/courses",
-                    "label": "Courses",
-                    "icon": "graduation-cap"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
-                },
-                {
-                    "path": "\/attendance",
-                    "label": "Attendance",
-                    "icon": "calendar-check-o"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap",
+                    "group": "Manage"
                 },
                 {
                     "path": "\/areasOfSpecialization",
                     "label": "Areas of Specialization",
-                    "icon": "list"
+                    "icon": "list",
+                    "group": "Manage"
                 }
             ],
             "labels": {
                 "\/home": "Home",
+                "\/notifications": "Notifications",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/urf": "URF",
                 "\/projects": "Projects",
                 "\/forms": "Forms",
                 "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
-                "\/courses": "Courses",
-                "\/students": "Students",
-                "\/faculty": "Faculty",
                 "\/attendance": "Attendance",
-                "\/notifications": "Notifications",
+                "\/courses": "Courses",
                 "\/areasOfSpecialization": "Areas of Specialization"
             },
             "tiles": [
@@ -1206,65 +1271,75 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/courses",
-                    "label": "Courses",
-                    "icon": "graduation-cap"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
-                },
-                {
-                    "path": "\/attendance",
-                    "label": "Attendance",
-                    "icon": "calendar-check-o"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap",
+                    "group": "Manage"
                 },
                 {
                     "path": "\/areasOfSpecialization",
                     "label": "Areas of Specialization",
-                    "icon": "list"
+                    "icon": "list",
+                    "group": "Manage"
                 }
             ],
             "labels": {
                 "\/home": "Home",
+                "\/notifications": "Notifications",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/urf": "URF",
                 "\/projects": "Projects",
                 "\/forms": "Forms",
                 "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
-                "\/courses": "Courses",
-                "\/students": "Students",
-                "\/faculty": "Faculty",
                 "\/attendance": "Attendance",
-                "\/notifications": "Notifications",
+                "\/courses": "Courses",
                 "\/areasOfSpecialization": "Areas of Specialization"
             },
             "tiles": [
@@ -1396,53 +1471,61 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/projects",
-                    "label": "Projects",
-                    "icon": "briefcase"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
                 }
             ],
             "labels": {
                 "\/home": "Home",
-                "\/projects": "Projects",
-                "\/forms": "Forms",
-                "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
+                "\/notifications": "Notifications",
                 "\/students": "Students",
                 "\/faculty": "Faculty",
-                "\/notifications": "Notifications"
+                "\/urf": "URF",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring"
             },
             "tiles": [
                 {
@@ -1563,48 +1646,55 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
                 }
             ],
             "labels": {
                 "\/home": "Home",
-                "\/projects": "Projects",
-                "\/forms": "Forms",
-                "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
+                "\/notifications": "Notifications",
                 "\/students": "Students",
                 "\/faculty": "Faculty",
-                "\/notifications": "Notifications"
+                "\/urf": "URF",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring"
             },
             "tiles": [
                 {
@@ -1720,59 +1810,68 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
+                    "icon": "home",
+                    "group": null
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
                 },
                 {
                     "path": "\/forms",
                     "label": "Forms",
-                    "icon": "file-text"
+                    "icon": "file-text",
+                    "group": "Academics"
                 },
                 {
                     "path": "\/presentation",
                     "label": "Progress Monitoring",
-                    "icon": "tasks"
+                    "icon": "tasks",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o",
+                    "group": "Academics"
                 },
                 {
                     "path": "\/publications",
                     "label": "Publications",
-                    "icon": "book"
+                    "icon": "book",
+                    "group": "Research"
                 },
                 {
                     "path": "\/openings",
                     "label": "Openings",
-                    "icon": "bullhorn"
+                    "icon": "bullhorn",
+                    "group": "Research"
                 },
                 {
                     "path": "\/courses",
                     "label": "Courses",
-                    "icon": "graduation-cap"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
-                },
-                {
-                    "path": "\/attendance",
-                    "label": "Attendance",
-                    "icon": "calendar-check-o"
-                },
-                {
-                    "path": "\/notifications",
-                    "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "graduation-cap",
+                    "group": "Manage"
                 }
             ],
             "labels": {
                 "\/home": "Home",
+                "\/notifications": "Notifications",
+                "\/faculty": "Faculty",
                 "\/forms": "Forms",
                 "\/presentation": "Progress Monitoring",
+                "\/attendance": "Attendance",
                 "\/publications": "Publications",
                 "\/openings": "Openings",
-                "\/courses": "Courses",
-                "\/faculty": "Faculty",
-                "\/attendance": "Attendance",
-                "\/notifications": "Notifications"
+                "\/courses": "Courses"
             },
             "tiles": [
                 {
@@ -1893,54 +1992,62 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/publications",
-                    "label": "Publications",
-                    "icon": "book"
-                },
-                {
-                    "path": "\/courses",
-                    "label": "Courses",
-                    "icon": "graduation-cap"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
-                },
-                {
-                    "path": "\/attendance",
-                    "label": "Attendance",
-                    "icon": "calendar-check-o"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/publications",
+                    "label": "Publications",
+                    "icon": "book",
+                    "group": "Research"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap",
+                    "group": "Manage"
                 }
             ],
             "labels": {
                 "\/home": "Home",
+                "\/notifications": "Notifications",
+                "\/faculty": "Faculty",
                 "\/forms": "Forms",
                 "\/presentation": "Progress Monitoring",
+                "\/attendance": "Attendance",
                 "\/publications": "Publications",
                 "\/openings": "Openings",
-                "\/courses": "Courses",
-                "\/faculty": "Faculty",
-                "\/attendance": "Attendance",
-                "\/notifications": "Notifications"
+                "\/courses": "Courses"
             },
             "tiles": [
                 {
@@ -2061,59 +2168,68 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/projects",
-                    "label": "Projects",
-                    "icon": "briefcase"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
-                },
-                {
-                    "path": "\/departments",
-                    "label": "Departments",
-                    "icon": "building"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building",
+                    "group": "Manage"
                 }
             ],
             "labels": {
                 "\/home": "Home",
+                "\/notifications": "Notifications",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/urf": "URF",
                 "\/projects": "Projects",
                 "\/forms": "Forms",
                 "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
-                "\/students": "Students",
-                "\/faculty": "Faculty",
-                "\/departments": "Departments",
-                "\/notifications": "Notifications"
+                "\/departments": "Departments"
             },
             "tiles": [
                 {
@@ -2239,54 +2355,62 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
-                },
-                {
-                    "path": "\/departments",
-                    "label": "Departments",
-                    "icon": "building"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building",
+                    "group": "Manage"
                 }
             ],
             "labels": {
                 "\/home": "Home",
+                "\/notifications": "Notifications",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/urf": "URF",
                 "\/projects": "Projects",
                 "\/forms": "Forms",
                 "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
-                "\/students": "Students",
-                "\/faculty": "Faculty",
-                "\/departments": "Departments",
-                "\/notifications": "Notifications"
+                "\/departments": "Departments"
             },
             "tiles": [
                 {
@@ -2407,113 +2531,131 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/projects",
-                    "label": "Projects",
-                    "icon": "briefcase"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/courses",
-                    "label": "Courses",
-                    "icon": "graduation-cap"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
-                },
-                {
-                    "path": "\/clerks",
-                    "label": "Clerks",
-                    "icon": "id-card-o"
-                },
-                {
-                    "path": "\/departments",
-                    "label": "Departments",
-                    "icon": "building"
-                },
-                {
-                    "path": "\/supervisor-doctoral-approvals",
-                    "label": "Supervisor Approvals",
-                    "icon": "user-plus"
-                },
-                {
-                    "path": "\/attendance",
-                    "label": "Attendance",
-                    "icon": "calendar-check-o"
-                },
-                {
-                    "path": "\/configuration",
-                    "label": "Configuration",
-                    "icon": "sliders"
-                },
-                {
-                    "path": "\/logs",
-                    "label": "Logs",
-                    "icon": "history"
-                },
-                {
-                    "path": "\/users",
-                    "label": "Manage Users",
-                    "icon": "cogs"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/clerks",
+                    "label": "Clerks",
+                    "icon": "id-card-o",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building",
+                    "group": "Manage"
                 },
                 {
                     "path": "\/areasOfSpecialization",
                     "label": "Areas of Specialization",
-                    "icon": "list"
+                    "icon": "list",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/supervisor-doctoral-approvals",
+                    "label": "Supervisor Approvals",
+                    "icon": "user-plus",
+                    "group": "Manage"
                 },
                 {
                     "path": "\/outside-experts",
                     "label": "Outside Experts",
-                    "icon": "user-o"
+                    "icon": "user-o",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/users",
+                    "label": "Manage Users",
+                    "icon": "cogs",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/configuration",
+                    "label": "Configuration",
+                    "icon": "sliders",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/logs",
+                    "label": "Logs",
+                    "icon": "history",
+                    "group": "Manage"
                 }
             ],
             "labels": {
                 "\/home": "Home",
-                "\/projects": "Projects",
-                "\/forms": "Forms",
-                "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
-                "\/courses": "Courses",
+                "\/notifications": "Notifications",
                 "\/students": "Students",
                 "\/faculty": "Faculty",
                 "\/clerks": "Clerks",
-                "\/departments": "Departments",
-                "\/supervisor-doctoral-approvals": "Supervisor Approvals",
+                "\/urf": "URF",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
                 "\/attendance": "Attendance",
-                "\/configuration": "Configuration",
-                "\/logs": "Logs",
-                "\/users": "Manage Users",
-                "\/notifications": "Notifications",
+                "\/courses": "Courses",
+                "\/departments": "Departments",
                 "\/areasOfSpecialization": "Areas of Specialization",
-                "\/outside-experts": "Outside Experts"
+                "\/supervisor-doctoral-approvals": "Supervisor Approvals",
+                "\/outside-experts": "Outside Experts",
+                "\/users": "Manage Users",
+                "\/configuration": "Configuration",
+                "\/logs": "Logs"
             },
             "tiles": [
                 {
@@ -2689,108 +2831,125 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/courses",
-                    "label": "Courses",
-                    "icon": "graduation-cap"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
-                },
-                {
-                    "path": "\/clerks",
-                    "label": "Clerks",
-                    "icon": "id-card-o"
-                },
-                {
-                    "path": "\/departments",
-                    "label": "Departments",
-                    "icon": "building"
-                },
-                {
-                    "path": "\/supervisor-doctoral-approvals",
-                    "label": "Supervisor Approvals",
-                    "icon": "user-plus"
-                },
-                {
-                    "path": "\/attendance",
-                    "label": "Attendance",
-                    "icon": "calendar-check-o"
-                },
-                {
-                    "path": "\/configuration",
-                    "label": "Configuration",
-                    "icon": "sliders"
-                },
-                {
-                    "path": "\/logs",
-                    "label": "Logs",
-                    "icon": "history"
-                },
-                {
-                    "path": "\/users",
-                    "label": "Manage Users",
-                    "icon": "cogs"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/clerks",
+                    "label": "Clerks",
+                    "icon": "id-card-o",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building",
+                    "group": "Manage"
                 },
                 {
                     "path": "\/areasOfSpecialization",
                     "label": "Areas of Specialization",
-                    "icon": "list"
+                    "icon": "list",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/supervisor-doctoral-approvals",
+                    "label": "Supervisor Approvals",
+                    "icon": "user-plus",
+                    "group": "Manage"
                 },
                 {
                     "path": "\/outside-experts",
                     "label": "Outside Experts",
-                    "icon": "user-o"
+                    "icon": "user-o",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/users",
+                    "label": "Manage Users",
+                    "icon": "cogs",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/configuration",
+                    "label": "Configuration",
+                    "icon": "sliders",
+                    "group": "Manage"
+                },
+                {
+                    "path": "\/logs",
+                    "label": "Logs",
+                    "icon": "history",
+                    "group": "Manage"
                 }
             ],
             "labels": {
                 "\/home": "Home",
-                "\/projects": "Projects",
-                "\/forms": "Forms",
-                "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
-                "\/courses": "Courses",
+                "\/notifications": "Notifications",
                 "\/students": "Students",
                 "\/faculty": "Faculty",
                 "\/clerks": "Clerks",
-                "\/departments": "Departments",
-                "\/supervisor-doctoral-approvals": "Supervisor Approvals",
+                "\/urf": "URF",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
                 "\/attendance": "Attendance",
-                "\/configuration": "Configuration",
-                "\/logs": "Logs",
-                "\/users": "Manage Users",
-                "\/notifications": "Notifications",
+                "\/courses": "Courses",
+                "\/departments": "Departments",
                 "\/areasOfSpecialization": "Areas of Specialization",
-                "\/outside-experts": "Outside Experts"
+                "\/supervisor-doctoral-approvals": "Supervisor Approvals",
+                "\/outside-experts": "Outside Experts",
+                "\/users": "Manage Users",
+                "\/configuration": "Configuration",
+                "\/logs": "Logs"
             },
             "tiles": [
                 {
@@ -2961,59 +3120,68 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/projects",
-                    "label": "Projects",
-                    "icon": "briefcase"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
-                },
-                {
-                    "path": "\/departments",
-                    "label": "Departments",
-                    "icon": "building"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building",
+                    "group": "Manage"
                 }
             ],
             "labels": {
                 "\/home": "Home",
+                "\/notifications": "Notifications",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/urf": "URF",
                 "\/projects": "Projects",
                 "\/forms": "Forms",
                 "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
-                "\/students": "Students",
-                "\/faculty": "Faculty",
-                "\/departments": "Departments",
-                "\/notifications": "Notifications"
+                "\/departments": "Departments"
             },
             "tiles": [
                 {
@@ -3139,54 +3307,62 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
-                },
-                {
-                    "path": "\/departments",
-                    "label": "Departments",
-                    "icon": "building"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building",
+                    "group": "Manage"
                 }
             ],
             "labels": {
                 "\/home": "Home",
+                "\/notifications": "Notifications",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/urf": "URF",
                 "\/projects": "Projects",
                 "\/forms": "Forms",
                 "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
-                "\/students": "Students",
-                "\/faculty": "Faculty",
-                "\/departments": "Departments",
-                "\/notifications": "Notifications"
+                "\/departments": "Departments"
             },
             "tiles": [
                 {
@@ -3307,35 +3483,40 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
                 }
             ],
             "labels": {
                 "\/home": "Home",
-                "\/forms": "Forms",
+                "\/notifications": "Notifications",
                 "\/students": "Students",
                 "\/faculty": "Faculty",
-                "\/notifications": "Notifications"
+                "\/forms": "Forms"
             },
             "tiles": [
                 {
@@ -3441,35 +3622,40 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
                 }
             ],
             "labels": {
                 "\/home": "Home",
-                "\/forms": "Forms",
+                "\/notifications": "Notifications",
                 "\/students": "Students",
                 "\/faculty": "Faculty",
-                "\/notifications": "Notifications"
+                "\/forms": "Forms"
             },
             "tiles": [
                 {
@@ -3575,41 +3761,47 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
                 }
             ],
             "labels": {
                 "\/home": "Home",
-                "\/forms": "Forms",
-                "\/presentation": "Progress Monitoring",
+                "\/notifications": "Notifications",
                 "\/students": "Students",
                 "\/faculty": "Faculty",
-                "\/notifications": "Notifications"
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring"
             },
             "tiles": [
                 {
@@ -3720,41 +3912,47 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
                 }
             ],
             "labels": {
                 "\/home": "Home",
-                "\/forms": "Forms",
-                "\/presentation": "Progress Monitoring",
+                "\/notifications": "Notifications",
                 "\/students": "Students",
                 "\/faculty": "Faculty",
-                "\/notifications": "Notifications"
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring"
             },
             "tiles": [
                 {
@@ -3865,53 +4063,61 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/projects",
-                    "label": "Projects",
-                    "icon": "briefcase"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
                 }
             ],
             "labels": {
                 "\/home": "Home",
-                "\/projects": "Projects",
-                "\/forms": "Forms",
-                "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
+                "\/notifications": "Notifications",
                 "\/students": "Students",
                 "\/faculty": "Faculty",
-                "\/notifications": "Notifications"
+                "\/urf": "URF",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring"
             },
             "tiles": [
                 {
@@ -4032,48 +4238,55 @@
                 {
                     "path": "\/home",
                     "label": "Home",
-                    "icon": "home"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/presentation",
-                    "label": "Progress Monitoring",
-                    "icon": "tasks"
-                },
-                {
-                    "path": "\/urf",
-                    "label": "URF",
-                    "icon": "flask"
-                },
-                {
-                    "path": "\/students",
-                    "label": "Students",
-                    "icon": "users"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
+                    "icon": "home",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks",
+                    "group": "Academics"
                 }
             ],
             "labels": {
                 "\/home": "Home",
-                "\/projects": "Projects",
-                "\/forms": "Forms",
-                "\/presentation": "Progress Monitoring",
-                "\/urf": "URF",
+                "\/notifications": "Notifications",
                 "\/students": "Students",
                 "\/faculty": "Faculty",
-                "\/notifications": "Notifications"
+                "\/urf": "URF",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring"
             },
             "tiles": [
                 {
@@ -4189,7 +4402,8 @@
                 {
                     "path": "\/attendance",
                     "label": "Attendance",
-                    "icon": "calendar-check-o"
+                    "icon": "calendar-check-o",
+                    "group": "Academics"
                 }
             ],
             "labels": {
@@ -4289,7 +4503,8 @@
                 {
                     "path": "\/attendance",
                     "label": "Attendance",
-                    "icon": "calendar-check-o"
+                    "icon": "calendar-check-o",
+                    "group": "Academics"
                 }
             ],
             "labels": {
@@ -4389,35 +4604,40 @@
                 {
                     "path": "\/home",
                     "label": "Profile",
-                    "icon": "user"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/publications",
-                    "label": "Publications",
-                    "icon": "book"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
+                    "icon": "user",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/publications",
+                    "label": "Publications",
+                    "icon": "book",
+                    "group": "Research"
                 }
             ],
             "labels": {
                 "\/home": "Profile",
-                "\/forms": "Forms",
-                "\/publications": "Publications",
+                "\/notifications": "Notifications",
                 "\/faculty": "Faculty",
-                "\/notifications": "Notifications"
+                "\/forms": "Forms",
+                "\/publications": "Publications"
             },
             "tiles": [
                 {
@@ -4523,35 +4743,40 @@
                 {
                     "path": "\/home",
                     "label": "Profile",
-                    "icon": "user"
-                },
-                {
-                    "path": "\/forms",
-                    "label": "Forms",
-                    "icon": "file-text"
-                },
-                {
-                    "path": "\/publications",
-                    "label": "Publications",
-                    "icon": "book"
-                },
-                {
-                    "path": "\/faculty",
-                    "label": "Faculty",
-                    "icon": "id-badge"
+                    "icon": "user",
+                    "group": null
                 },
                 {
                     "path": "\/notifications",
                     "label": "Notifications",
-                    "icon": "bell"
+                    "icon": "bell",
+                    "group": null
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text",
+                    "group": "Academics"
+                },
+                {
+                    "path": "\/publications",
+                    "label": "Publications",
+                    "icon": "book",
+                    "group": "Research"
                 }
             ],
             "labels": {
                 "\/home": "Profile",
-                "\/forms": "Forms",
-                "\/publications": "Publications",
+                "\/notifications": "Notifications",
                 "\/faculty": "Faculty",
-                "\/notifications": "Notifications"
+                "\/forms": "Forms",
+                "\/publications": "Publications"
             },
             "tiles": [
                 {
