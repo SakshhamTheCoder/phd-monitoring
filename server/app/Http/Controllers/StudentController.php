@@ -1242,6 +1242,7 @@ class StudentController extends Controller {
 
     // Sort alphabetically by the student's name. Ordered via a correlated subquery
     // rather than a join so the eager loads and `select *` above stay intact.
+    \App\Support\DemoAccounts::sortLast($studentsQuery, 'students');
     $studentsQuery->orderBy(User::select('first_name')->whereColumn('users.id', 'students.user_id'))
         ->orderBy(User::select('last_name')->whereColumn('users.id', 'students.user_id'));
 

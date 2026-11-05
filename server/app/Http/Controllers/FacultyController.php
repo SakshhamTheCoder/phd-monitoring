@@ -344,6 +344,7 @@ class FacultyController extends Controller
         }
 
         // Sort alphabetically by the faculty member's name.
+        \App\Support\DemoAccounts::sortLast($facultyQuery, 'faculty');
         $facultyQuery->orderBy(User::select('first_name')->whereColumn('users.id', 'faculty.user_id'))
             ->orderBy(User::select('last_name')->whereColumn('users.id', 'faculty.user_id'));
 
