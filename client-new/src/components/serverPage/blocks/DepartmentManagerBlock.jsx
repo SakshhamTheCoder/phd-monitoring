@@ -23,6 +23,7 @@ const DepartmentManagerBlock = ({ row, onClose, onChanged }) => {
     <DepartmentManager
       departmentId={department.id}
       departmentName={department.name || department.department_name}
+      departmentCode={department.code}
       hodEmail={department.hod_email}
       currentHod={department.hod}
       currentAdordc={department.adordc}

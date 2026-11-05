@@ -12,6 +12,7 @@ import { useLoading } from '../../context/LoadingContext';
 import TableComponent from '../forms/table/TableComponent';
 import Panel, { PanelSection } from '../panel/Panel';
 import StatusNotice from '../common/StatusNotice';
+import InputField from '../forms/fields/InputField';
 
 // The same shape three times: a role, the action that changes it, and who
 // currently holds it. Kept outside DepartmentManager so the sections are not
@@ -22,13 +23,46 @@ const RoleSection = ({ title, action, isEmpty, emptyText, children }) => (
   </PanelSection>
 );
 
-const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod, currentAdordc, currentCoordinators = [], onClose, onUpdate }) => {
+const DepartmentManager = ({ departmentId, departmentName, departmentCode, hodEmail, currentHod, currentAdordc, currentCoordinators = [], onClose, onUpdate }) => {
   const [showHodModal, setShowHodModal] = useState(false);
   const [showAdordcModal, setShowAdordcModal] = useState(false);
   const [showCoordinatorModal, setShowCoordinatorModal] = useState(false);
   const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [loading, setLoadingState] = useState(false);
   const { setLoading } = useLoading();
+
+  // The department's own name and code, edited in the same dialog as its people.
+  const [name, setName] = useState(departmentName || '');
+  const [code, setCode] = useState(departmentCode || '');
+  useEffect(() => { setName(departmentName || ''); }, [departmentName]);
+  useEffect(() => { setCode(departmentCode || ''); }, [departmentCode]);
+  const detailsChanged = name.trim() !== (departmentName || '') || code.trim() !== (departmentCode || '');
+
+  const handleSaveDetails = async () => {
+    if (!name.trim() || !code.trim()) {
+      toast.error('Both the name and the code are needed');
+      return;
+    }
+    try {
+      setLoadingState(true);
+      setLoading(true);
+      const response = await customFetch(`${baseURL}/departments/update/${departmentId}`, 'PUT', {
+        name: name.trim(),
+        code: code.trim(),
+      });
+      if (response.success) {
+        toast.success('Department updated.');
+        if (onUpdate) onUpdate();
+      }
+      // A refusal was already toasted by customFetch, with the server's reason.
+    } catch (error) {
+      console.error('Error updating department:', error);
+      toast.error('Failed to update department.');
+    } finally {
+      setLoadingState(false);
+      setLoading(false);
+    }
+  };
 
   const hodTableData = currentHod ? [{
     faculty_code: currentHod.faculty_code,
@@ -192,6 +226,32 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
       )}
 
       <Panel>
+
+      <PanelSection
+        title="Department details"
+        actions={
+          <CustomButton
+            text="Save details"
+            variant="secondary"
+            size="sm"
+            onClick={handleSaveDetails}
+            busy={loading}
+            disabled={!detailsChanged}
+          />
+        }
+      >
+        <GridContainer
+          elements={[
+            <InputField label="Department name" initialValue={name} onChange={setName} required />,
+            <InputField label="Department code" initialValue={code} onChange={setCode} required />,
+          ]}
+          space={2}
+        />
+        <p className="modal-note">
+          Changing the code does not affect existing records. Spreadsheets that
+          still use the old code will no longer match this department.
+        </p>
+      </PanelSection>
 
       <RoleSection
         title="Head of department (HOD)"
