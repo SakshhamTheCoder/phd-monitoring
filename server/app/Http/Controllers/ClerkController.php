@@ -137,7 +137,7 @@ class ClerkController extends Controller
                 'roll_no' => $student->roll_no,
                 'name' => optional($student->user)->name(),
                 'department_id' => $student->department_id,
-                'department_name' => optional($student->department)->name,
+                'department_name' => \App\Support\DepartmentLabel::of($student->department),
                 'department_code' => optional($student->department)->code,
                 'current_status' => $student->current_status,
                 // null when not yet taken — lets the client distinguish "not recorded" from explicit present
@@ -583,7 +583,7 @@ class ClerkController extends Controller
             return [
                 'roll_no' => $student->roll_no,
                 'name' => optional($student->user)->name(),
-                'department_name' => optional($student->department)->name,
+                'department_name' => \App\Support\DepartmentLabel::of($student->department),
                 'present' => $summary['present'],
                 'absent' => $summary['absent'],
                 'total' => $summary['total'],

@@ -5,7 +5,7 @@ import { apiUgDepartmentOptions } from '../api/lookups';
 export const useUgDepartmentOptions = () => {
   const departments = useUgDepartments();
 
-  return departments.map((department) => ({ title: department.name, value: department.id }));
+  return departments.map((department) => ({ title: department.code || department.name, value: department.id, keywords: department.name }));
 };
 
 /** The same list as the server sends it, for a page that formats it itself. */

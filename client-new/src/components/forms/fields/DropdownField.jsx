@@ -1,4 +1,5 @@
 import React, { useEffect, useId, useState } from 'react';
+import SearchSelect from "./SearchSelect";
 import "./Fields.css";
 
 const DropdownField = ({ label, options, initialValue, isLocked, onChange, required = false }) => {
@@ -13,6 +14,8 @@ const DropdownField = ({ label, options, initialValue, isLocked, onChange, requi
     }, [initialValue]);
 
     const list = options || [];
+    // Options that carry `keywords` (a department's full name, shown by its code) are searched, not scrolled.
+    const searchable = list.some((option) => option.keywords);
     const selected = list.find((option) => String(option.value) === String(value));
 
     // A prefilled value is often an id, so the list has to be able to show the
@@ -48,6 +51,15 @@ const DropdownField = ({ label, options, initialValue, isLocked, onChange, requi
                     {label}{required && <span className="req" aria-hidden="true">*</span>}
                 </label>
             )}
+            {searchable ? (
+                <SearchSelect
+                    id={fieldId}
+                    value={value}
+                    options={list}
+                    required={required}
+                    onChange={(chosen) => { updateValue(chosen); onChange(chosen); }}
+                />
+            ) : (
             <select
                 id={fieldId}
                 aria-required={required || undefined}
@@ -63,6 +75,7 @@ const DropdownField = ({ label, options, initialValue, isLocked, onChange, requi
                     </option>
                 ))}
             </select>
+            )}
         </div>
     );
 };

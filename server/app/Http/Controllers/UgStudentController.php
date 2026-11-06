@@ -69,7 +69,7 @@ class UgStudentController extends Controller
                     'first_name' => $student->user?->first_name,
                     'last_name' => $student->user?->last_name,
                     'roll_no' => $student->roll_no,
-                    'department' => $student->department?->name,
+                    'department' => \App\Support\DepartmentLabel::of($student->department),
                     'department_id' => $student->department_id,
                     'year_of_study' => $student->year,
                     'year' => UrfApplication::yearLabel($student->year),

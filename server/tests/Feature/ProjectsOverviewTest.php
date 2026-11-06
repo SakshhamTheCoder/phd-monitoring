@@ -22,8 +22,8 @@ class ProjectsOverviewTest extends TestCase
         ])->assertCreated()->json('id');
 
         $row = collect($this->actingAs($pi)->getJson('/api/projects/overview')->assertOk()->json('rows'))->firstWhere('id', $id);
-        $this->assertSame(['Overview project', ['text' => 'International', 'tone' => 'purple'], 'PI', '₹12.35 Cr', '2 Years 1 Month', true], [
-            $row['title'], $row['category'], $row['role'], $row['amount'], $row['duration'], $row['can_edit'],
+        $this->assertSame(['Overview project', ['text' => 'International', 'tone' => 'purple'], $pi->name(), '₹12.35 Cr', '2 Years 1 Month', true], [
+            $row['title'], $row['category'], $row['pi'], $row['amount'], $row['duration'], $row['can_edit'],
         ]);
 
         // The department reads it, and may not change it.

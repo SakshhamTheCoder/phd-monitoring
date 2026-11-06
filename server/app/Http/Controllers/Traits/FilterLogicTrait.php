@@ -210,7 +210,18 @@ private function applyCondition($query, string $key, $op, $value, bool $or = fal
     $relation = implode('.', $relationPath);
 
     if ($relation) {
-        return $query->{$or ? 'orWhereHas' : 'whereHas'}($relation, function ($q) use ($column, $op, $value) {
+        // A department is written by its code on screen, so a filter on its name
+        // finds it by the code as well.
+        $byCode = $column === 'name' && str_ends_with($relation, 'department');
+
+        return $query->{$or ? 'orWhereHas' : 'whereHas'}($relation, function ($q) use ($column, $op, $value, $byCode) {
+            if ($byCode) {
+                $q->where(function ($either) use ($op, $value) {
+                    $either->where('name', $op, $value)->orWhere('code', $op, $value);
+                });
+
+                return;
+            }
             $this->whereColumnMatches($q, $column, $op, $value);
         });
     }

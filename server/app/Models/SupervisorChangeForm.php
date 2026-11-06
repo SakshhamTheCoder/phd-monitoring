@@ -60,7 +60,7 @@ class SupervisorChangeForm extends Model
                 return [
                     'name' => $faculty?->user->name(),
                     'designation' => $faculty?->designation,
-                    'department' => $faculty?->department->name,
+                    'department' => \App\Support\DepartmentLabel::of($faculty?->department),
                     // The form seeds a resubmission from these codes.
                     'faculty_code' => $supervisor,
                 ];
@@ -73,7 +73,7 @@ class SupervisorChangeForm extends Model
             return [
                 'name' => $faculty->user->name(),
                 'designation' => $faculty->designation,
-                'department' => $faculty->department->name,
+                'department' => \App\Support\DepartmentLabel::of($faculty->department),
                 'faculty_code' => $preference,
             ];
             }),
@@ -82,7 +82,7 @@ class SupervisorChangeForm extends Model
             return [
                 'name' => $faculty?->user->name(),
                 'designation' => $faculty?->designation,
-                'department' => $faculty?->department->name,
+                'department' => \App\Support\DepartmentLabel::of($faculty?->department),
             ];
             }),
             'new_supervisors' => collect($this->new_supervisors)->map(function ($supervisor) {
@@ -90,7 +90,7 @@ class SupervisorChangeForm extends Model
             return [
                 'name' => $faculty->user->name(),
                 'designation' => $faculty->designation,
-                'department' => $faculty->department->name,
+                'department' => \App\Support\DepartmentLabel::of($faculty->department),
                 'faculty_code' => $supervisor,
             ];
             }),
@@ -101,7 +101,7 @@ class SupervisorChangeForm extends Model
             return [
                 'name' => $supervisor->user->name(),
                 'designation' => $supervisor->designation,
-                'department' => $supervisor->department->name,
+                'department' => \App\Support\DepartmentLabel::of($supervisor->department),
                 'faculty_code' => $supervisor->faculty_code,
             ];
         });

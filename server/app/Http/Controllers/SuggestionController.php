@@ -201,7 +201,11 @@ class SuggestionController extends Controller
                         ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$like]);
                 })
                     ->orWhere('faculty_code', 'LIKE', $like)
-                    ->orWhere('designation', 'LIKE', $like);
+                    ->orWhere('designation', 'LIKE', $like)
+                    // CSED finds the department's faculty as well as its title does.
+                    ->orWhereHas('department', fn ($department) => $department
+                        ->where('code', 'LIKE', $like)
+                        ->orWhere('name', 'LIKE', $like));
             });
         }
 
@@ -231,7 +235,7 @@ class SuggestionController extends Controller
             'name' => $faculty->user->name(),
             'email' => $faculty->user->email,
             'designation' => $faculty->designation,
-            'department' => $faculty->department->name ?? 'N/A',
+            'department' => \App\Support\DepartmentLabel::of($faculty->department) ?? 'N/A',
             ];
         });
 
@@ -302,7 +306,7 @@ class SuggestionController extends Controller
                 'name' => $student->user->name(),
                 'roll_no' => $student->roll_no,
                 'email' => $student->user->email,
-                'department' => $student->department->name ?? 'N/A',
+                'department' => \App\Support\DepartmentLabel::of($student->department) ?? 'N/A',
             ]);
 
         return response()->json($students);
@@ -339,10 +343,12 @@ class SuggestionController extends Controller
             ->map(function ($department) {
             return [
             'id' => $department->id,
-            // Kept as the bare name: the filter bar sends this value back to be
-            // matched against departments.name, so decorating it would stop
-            // department filters matching anything.
-            'name' => $department->name,
+            // Written by its code, like every other display of a department. The
+            // filter bar sends this value back and a department filter matches
+            // the name or the code, so the code finds it. Searching above reads
+            // both; full_name is for a caller that wants the title.
+            'name' => \App\Support\DepartmentLabel::of($department),
+            'full_name' => $department->name,
             'code' => $department->code,
             ];
         });

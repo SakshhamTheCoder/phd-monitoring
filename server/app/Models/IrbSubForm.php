@@ -93,7 +93,7 @@ class IrbSubForm extends Model
             return [
                 'name' => $supervisor->user->name(),
                 'designation' => $supervisor->designation,
-                'department' => $supervisor->department->name,
+                'department' => \App\Support\DepartmentLabel::of($supervisor->department),
                 'supervised_campus'=>$supervisor->supervised_campus,
                 'supervised_outside'=>$supervisor->supervised_outside,
             ];
@@ -104,7 +104,7 @@ class IrbSubForm extends Model
             $formData['current_supervisor'] = [
                 'name' => $currentSupervisor->user->name(),
                 'designation' => $currentSupervisor->designation,
-                'department' => $currentSupervisor->department->name,
+                'department' => \App\Support\DepartmentLabel::of($currentSupervisor->department),
                 'supervised_campus' => $currentSupervisor->supervised_campus,
                 'supervised_outside' => $currentSupervisor->supervised_outside,
             ];

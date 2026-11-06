@@ -176,7 +176,7 @@ class Student extends Model
         return [
             'name' => $this->user->name,
             'roll_no' => $this->roll_no,
-            'department' => $this->department->name,
+            'department' => \App\Support\DepartmentLabel::of($this->department),
             'date_of_registration' => $this->date_of_registration,
             'date_of_irb' => $this->date_of_irb,
             'date_of_synopsis' => $this->date_of_synopsis,

@@ -129,7 +129,7 @@ trait ModelCommonFormFields
             'roll_no' => $this->student->roll_no,
             'email' => $this->student->user->email,
             'phone' => $this->student->user->phone,
-            'department' => $this->student->department->name,
+            'department' => \App\Support\DepartmentLabel::of($this->student->department),
             'date_of_registration' => $this->student->date_of_registration?->toDateString(),
             'phd_title' => $this->student->phd_title,
             'gender' => $this->student->user->gender,
@@ -140,7 +140,7 @@ trait ModelCommonFormFields
                 return [
                     'name' => $supervisor->user->name(),
                     'designation' => $supervisor->designation,
-                    'department' => $supervisor->department->name
+                    'department' => \App\Support\DepartmentLabel::of($supervisor->department)
                 ];
             }),
             'status' => $this->status,

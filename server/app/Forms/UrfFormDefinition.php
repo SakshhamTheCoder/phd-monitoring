@@ -81,7 +81,7 @@ final class UrfFormDefinition extends FormDefinition
                 'name' => self::facultyName($mentor),
                 'email' => $mentor['user']['email'] ?? null,
                 'designation' => $mentor['designation'] ?? null,
-                'department' => $mentor['department']['name'] ?? 'N/A',
+                'department' => \App\Support\DepartmentLabel::of($mentor['department'] ?? null) ?? 'N/A',
             ], $mentors))], space: 3),
         ];
         // Only reviewers receive the students' other projects.
@@ -124,7 +124,7 @@ final class UrfFormDefinition extends FormDefinition
             self::row([
                 Field::text('Submitted By')->value($filled['submitted_by'] ?? null),
                 Field::text('Faculty Mentor Name')->value(implode(', ', array_map([self::class, 'facultyName'], $mentors))),
-                Field::text('Faculty Mentor Department')->value(implode(', ', array_filter(array_map(fn ($m) => $m['department']['name'] ?? null, $mentors)))),
+                Field::text('Faculty Mentor Department')->value(implode(', ', array_filter(array_map(fn ($m) => \App\Support\DepartmentLabel::of($m['department'] ?? null) ?? null, $mentors)))),
                 Field::text('Conference Presentation')->value($filled['conference_presentation'] ?? null),
                 Field::text('Submitted On')->value($filled['submitted_on'] ?? null)->format('date'),
             ]),
@@ -156,7 +156,7 @@ final class UrfFormDefinition extends FormDefinition
             $students[] = [
                 'name' => $record["student{$n}_name"],
                 'roll_no' => $record["student{$n}_roll_no"] ?? null,
-                'department' => $record["student{$n}_department"]['name'] ?? 'N/A',
+                'department' => \App\Support\DepartmentLabel::of($record["student{$n}_department"] ?? null) ?? 'N/A',
                 'year' => self::yearLabel($record["student{$n}_year"] ?? null),
                 'gender' => $record["student{$n}_gender"] ?? null,
                 'email' => $record["student{$n}_email"] ?? null,

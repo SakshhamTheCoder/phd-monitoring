@@ -64,14 +64,14 @@ class ConstituteOfIRB extends Model
             'chairman' => ($this->student->department->hod && $this->student->department->hod->user) ? [
                 'name' => $this->student->department->hod->user->name(),
                 'designation' => $this->student->department->hod->designation,
-                'department' => $this->student->department->name
+                'department' => \App\Support\DepartmentLabel::of($this->student->department)
             ] : null,
             'nominee_cognates' => $this->nomineeCognates->map(function ($nominee) {
                 return [
                     'faculty_code' => $nominee->nominee->faculty_code,
                     'name' => $nominee->nominee->user->name(),
                     'designation' => $nominee->nominee->designation,
-                    'department' => $nominee->nominee->department->name,
+                    'department' => \App\Support\DepartmentLabel::of($nominee->nominee->department),
                 ];
             }),
             'outside_experts' => $this->outsideExperts->map(function ($expert) {
@@ -90,7 +90,7 @@ class ConstituteOfIRB extends Model
                 return [
                     'name' => $expert->expert->user->name(),
                     'designation' => $expert->expert->designation,
-                    'department' => $expert->expert->department->name,
+                    'department' => \App\Support\DepartmentLabel::of($expert->expert->department),
                     'faculty_code' => $expert->expert->user->faculty->faculty_code,
                 ];
             }),

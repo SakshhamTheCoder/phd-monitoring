@@ -36,7 +36,8 @@ class SynopsisChecklistController extends Controller
         // The page reads a condition back as a sentence, so it needs the
         // department names the ids stand for. Read once for the whole list.
         $departments = Department::whereIn('id', $rules->pluck('department_ids')->flatten()->filter()->unique())
-            ->pluck('name', 'id');
+            ->get()
+            ->mapWithKeys(fn (Department $department) => [$department->id => \App\Support\DepartmentLabel::of($department)]);
 
         // How many scholars a condition actually decides for, and how many
         // forms have chosen each wording. Without these the page is a list of
@@ -104,7 +105,7 @@ class SynopsisChecklistController extends Controller
         return response()->json([
             'scholar' => $scholar ? [
                 'roll_no' => $scholar->roll_no,
-                'department' => $scholar->department?->name,
+                'department' => \App\Support\DepartmentLabel::of($scholar->department),
                 'admitted_on' => $admittedOn,
             ] : null,
             'conditions' => $rules->map(fn (SynopsisChecklistRule $rule) => [

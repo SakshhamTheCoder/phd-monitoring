@@ -20,10 +20,9 @@ final class ClerksPage extends PageDefinition
     {
         $departments = Department::orderBy('name')->get()->map(fn ($department) => [
             'value' => $department->id,
-            'title' => $department->name . ' ' . ($department->code ? "({$department->code})" : ''),
-            // Drawn as separate words, as the page drew them: text split into
-            // pieces is laid out a hair differently from the same text whole.
-            'parts' => [$department->name, $department->code ? "({$department->code})" : ''],
+            // The code is shown; the full name is found by searching and on hover.
+            'title' => \App\Support\DepartmentLabel::of($department),
+            'keywords' => $department->name,
         ])->all();
 
         return self::page('Clerk management', 'Create clerk logins and tag them with the departments whose PhD attendance they mark.', [
@@ -46,11 +45,11 @@ final class ClerksPage extends PageDefinition
                 'columns' => [
                     ['key' => 'name', 'title' => 'Name'],
                     ['key' => 'email', 'title' => 'Email'],
-                    ['key' => 'departments', 'title' => 'Departments', 'list_of' => 'name'],
+                    ['key' => 'departments', 'title' => 'Departments', 'list_of' => 'code'],
                 ],
                 // A clerk can be tagged with several departments, so this filter
-                // matches any one of them.
-                'lists' => ['department.name' => ['list' => 'departments', 'key' => 'name']],
+                // matches any one of them, by name or by code.
+                'lists' => ['department.name' => ['list' => 'departments', 'key' => ['name', 'code']]],
                 'actions' => [
                     ['label' => 'Manage departments', 'icon' => 'fa fa-users', 'opens' => 'departments'],
                 ],

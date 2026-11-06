@@ -181,12 +181,12 @@ class UserManagementController extends Controller
                 'student_info' => $user->student ? [
                     // roll_number is not a column; this was always null.
                     'roll_number' => $user->student->roll_no,
-                    'department' => $user->student->department->name ?? null,
+                    'department' => \App\Support\DepartmentLabel::of($user->student->department) ?? null,
                 ] : null,
                 'faculty_info' => $user->faculty ? [
                     'faculty_code' => $user->faculty->faculty_code,
                     'designation' => $user->faculty->designation,
-                    'department' => $user->faculty->department->name ?? null,
+                    'department' => \App\Support\DepartmentLabel::of($user->faculty->department) ?? null,
                 ] : null,
             ];
         });

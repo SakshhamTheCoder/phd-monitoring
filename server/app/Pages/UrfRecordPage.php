@@ -135,7 +135,7 @@ final class UrfRecordPage extends PageDefinition
             $rows[] = [
                 'name' => $record["student{$n}_name"],
                 'roll_no' => $record["student{$n}_roll_no"] ?? null,
-                'department' => $record["student{$n}_department"]['name'] ?? self::EMPTY,
+                'department' => \App\Support\DepartmentLabel::of($record["student{$n}_department"] ?? null) ?? self::EMPTY,
                 'year' => self::yearLabel($record["student{$n}_year"] ?? null),
                 'gender' => $record["student{$n}_gender"] ?? null,
                 'email' => $record["student{$n}_email"] ?? null,
@@ -152,7 +152,7 @@ final class UrfRecordPage extends PageDefinition
             'name' => implode(' ', array_filter([$mentor['user']['first_name'] ?? null, $mentor['user']['last_name'] ?? null])),
             'email' => $mentor['user']['email'] ?? null,
             'designation' => $mentor['designation'] ?? null,
-            'department' => $mentor['department']['name'] ?? self::EMPTY,
+            'department' => \App\Support\DepartmentLabel::of($mentor['department'] ?? null) ?? self::EMPTY,
         ], array_values(array_filter([$record['mentor1'] ?? null, $record['mentor2'] ?? null])));
     }
 

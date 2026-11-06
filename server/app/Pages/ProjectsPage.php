@@ -21,7 +21,7 @@ final class ProjectsPage extends PageDefinition
 {
     private const EMPTY = 'N/A';
 
-    private const EXPORT_HEADERS = ['Project Title', 'Category', 'Your role', 'Funding Agency', 'Amount', 'Duration', 'Status'];
+    private const EXPORT_HEADERS = ['Project Title', 'Category', 'PI', 'Funding Agency', 'Amount', 'Duration', 'Status'];
 
     public function allows(User $user): bool
     {
@@ -43,7 +43,7 @@ final class ProjectsPage extends PageDefinition
             'data' => '/projects/overview',
             // Shown until the figures arrive.
             'facts' => self::facts(['active' => 0, 'completed' => 0, 'totalFunding' => 0, 'consultancy' => 0, 'international' => 0]),
-            'columns' => ['Project title', 'Category', 'Your role', 'Funding agency', 'Amount', 'Duration', 'Status'],
+            'columns' => ['Project title', 'Category', 'PI', 'Funding agency', 'Amount', 'Duration', 'Status'],
             'row' => ['opens' => '/projects/{id}', 'edit' => 'Edit project', 'delete' => 'Delete project', 'read_only' => 'View only', 'open' => 'Open project'],
             'states' => [
                 'loading' => 'Loading projects',
@@ -60,6 +60,15 @@ final class ProjectsPage extends PageDefinition
                 ],
             ],
         ]);
+    }
+
+    /** The PI's name as their account has it. */
+    private static function piName(array $project, string $none = self::EMPTY): string
+    {
+        $user = $project['pi']['user'] ?? [];
+        $name = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
+
+        return $name !== '' ? $name : $none;
     }
 
     private static function facts(array $stats): array
@@ -92,7 +101,7 @@ final class ProjectsPage extends PageDefinition
                 'id' => $p['id'],
                 'title' => $p['title'],
                 'category' => Badge::of($p['category']),
-                'role' => $p['viewer_role'] ?: self::EMPTY,
+                'pi' => self::piName($p),
                 'agency' => $p['funding_agency'],
                 'amount' => Rupees::short($p['amount']),
                 'duration' => ProjectDuration::format($p['duration_years'], $p['duration_months']),
@@ -102,7 +111,7 @@ final class ProjectsPage extends PageDefinition
             // What Export CSV writes: the figures as stored, not as drawn.
             'export' => [
                 'headers' => self::EXPORT_HEADERS,
-                'rows' => array_map(fn ($p) => [$p['title'], $p['category'], $p['viewer_role'], $p['funding_agency'], $p['amount'], ProjectDuration::format($p['duration_years'], $p['duration_months']), $p['status']], $projects),
+                'rows' => array_map(fn ($p) => [$p['title'], $p['category'], self::piName($p, ''), $p['funding_agency'], $p['amount'], ProjectDuration::format($p['duration_years'], $p['duration_months']), $p['status']], $projects),
             ],
         ];
     }

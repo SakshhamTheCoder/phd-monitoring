@@ -59,7 +59,7 @@ class StudentLeaveFormController extends Controller
                 'leave_type', 'from_date', 'to_date', 'day_part',
                 // An HOD only ever reads their own department, but an admin reads
                 // every department at once and has to be able to tell them apart.
-                'department' => fn ($form) => $form->student->department?->name,
+                'department' => fn ($form) => \App\Support\DepartmentLabel::of($form->student->department),
                 'department_id' => fn ($form) => $form->student->department_id,
             ],
             'titles' => ['Type', 'From', 'To', 'Part'],

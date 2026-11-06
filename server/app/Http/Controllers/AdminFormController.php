@@ -241,7 +241,7 @@ class AdminFormController extends Controller
                 'student' => [
                     'roll_no' => $student->roll_no,
                     'name' => $student->user->name(),
-                    'department' => $student->department->name,
+                    'department' => \App\Support\DepartmentLabel::of($student->department),
                 ],
                 'forms' => $formsData,
             ], 200);

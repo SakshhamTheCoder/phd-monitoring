@@ -163,8 +163,8 @@ final class StudentsPage extends PageDefinition
     private static function ugRows(bool $edit): array
     {
         $text = fn (string $label, string $key) => Field::text($label)->key($key)->value('')->from($key)->open();
-        $departments = Department::orderBy('name')->get(['id', 'name'])
-            ->map(fn ($department) => ['title' => $department->name, 'value' => $department->id])->all();
+        $departments = Department::orderBy('name')->get(['id', 'name', 'code'])
+            ->map(fn ($department) => ['title' => \App\Support\DepartmentLabel::of($department), 'value' => $department->id, 'keywords' => $department->name])->all();
         $suffix = fn (int $year) => ['', 'st', 'nd', 'rd'][$year] ?? 'th';
 
         return [

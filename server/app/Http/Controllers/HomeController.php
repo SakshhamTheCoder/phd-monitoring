@@ -45,7 +45,7 @@ class HomeController extends Controller
                     'phd_title' => $student->phd_title,
                     'overall_progress' => $student->overall_progress,
                     'roll_no' => $student->roll_no,
-                    'department' => $student->department->name,
+                    'department' => \App\Support\DepartmentLabel::of($student->department),
                     // Same shape as `doctoral` below. It used to be a bare name,
                     // which left no way to reach the supervisor's profile.
                     'supervisors' => $student->supervisors->map(fn($s) => [
@@ -105,7 +105,7 @@ class HomeController extends Controller
                 // One serializer, shared with the faculty profile, so the two
                 // cannot describe a supervised student differently.
                 ...$faculty->supervisionPayload(),
-                'department' => $faculty->department->name,
+                'department' => \App\Support\DepartmentLabel::of($faculty->department),
                 'supervised_outside' => $faculty->supervised_outside,
                 'supervised_campus' => $faculty->supervised_campus,
                 'expertise' => $faculty->expertise ?? [],

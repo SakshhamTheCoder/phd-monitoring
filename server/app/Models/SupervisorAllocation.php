@@ -45,7 +45,7 @@ class SupervisorAllocation extends Model
                     return [
                         'name' => $faculty->user->name(),
                         'designation' => $faculty->designation,
-                        'department' => $faculty->department->name,
+                        'department' => \App\Support\DepartmentLabel::of($faculty->department),
                         'faculty_code' => $faculty->faculty_code,
                         'email' => $faculty->user->email,
                     ];
@@ -55,7 +55,7 @@ class SupervisorAllocation extends Model
                     return [
                         'name' => $faculty->user->name(),
                         'designation' => $faculty->designation,
-                        'department' => $faculty->department->name,
+                        'department' => \App\Support\DepartmentLabel::of($faculty->department),
                         'faculty_code' => $faculty->faculty_code,
                         'supervised_campus' => $faculty->supervised_campus,
                         'supervised_outside' => $faculty->supervised_outside,

@@ -117,8 +117,9 @@ class DepartmentController extends Controller
             'current_page' => $faculties->currentPage(),
             'totalPages' => $faculties->lastPage(),
             'role' => $role,
-            'fields' => ['name', 'hod_name', 'hod_email', 'hod_phone'],
-            'fieldsTitles' => ['Name', 'HOD Name', 'Email', 'Phone'],
+            // Both: this is where a department is managed, so it shows the title and the code.
+            'fields' => ['name', 'code', 'hod_name', 'hod_email', 'hod_phone'],
+            'fieldsTitles' => ['Name', 'Code', 'HOD Name', 'Email', 'Phone'],
         ]);
     }
     
@@ -282,7 +283,7 @@ class DepartmentController extends Controller
                     'id' => $area->id,
                     'name' => $area->name,
                     'department_id' => $area->department_id,
-                    'department_name' => $area->department->name ?? 'N/A',
+                    'department_name' => \App\Support\DepartmentLabel::of($area->department) ?? 'N/A',
                     'created_at' => $area->created_at,
                 ];
             });

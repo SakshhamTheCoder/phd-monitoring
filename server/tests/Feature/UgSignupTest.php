@@ -376,7 +376,7 @@ class UgSignupTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.roll_no', $form['roll_no'])
-            ->assertJsonPath('data.0.department', 'Signup Test Department')
+            ->assertJsonPath('data.0.department', 'SGNTB')
             ->assertJsonPath('data.0.projects', 0);
 
         $this->actingAs($student, 'sanctum')->getJson('/api/ug-students')->assertForbidden();

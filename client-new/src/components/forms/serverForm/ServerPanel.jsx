@@ -107,6 +107,48 @@ const passes = (checks = [], values, files, answers = values) => {
 // is drawn away from its own route, and what to do after a reload or a delete.
 // A dialog hosts it too: it takes the answers (submit), closes (onCancel) and
 // says when its request is in flight (busy).
+/**
+ * A grid of ticks. Options that carry `keywords` (a department's full name,
+ * shown by its code) get a search box, and the keywords show on hover.
+ */
+const CheckGrid = ({ field, ticked, toggle }) => {
+  const [search, setSearch] = useState("");
+  const searchable = field.options.some((option) => option.keywords);
+  const wanted = search.trim().toLowerCase();
+  const shown = wanted
+    ? field.options.filter((option) => `${option.title} ${option.keywords ?? ""}`.toLowerCase().includes(wanted))
+    : field.options;
+
+  if (field.options.length === 0) return <div className={field.grid_class}><span className={field.empty_class}>{field.empty}</span></div>;
+
+  return (
+    <>
+      {searchable && (
+        <input
+          type="search"
+          className="input-field"
+          aria-label="Search by name or code"
+          placeholder="Search by name or code"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      )}
+      <div className={field.grid_class}>
+        {shown.map((option) => {
+          const chosen = ticked.includes(option.value);
+          return (
+            <label key={option.value} className={`${field.class_name}${chosen ? " is-chosen" : ""}`} title={option.keywords || undefined}>
+              <input type="checkbox" checked={chosen} onChange={() => toggle(option.value)} />
+              <span>{option.parts ? option.parts.flatMap((part, at) => (at ? [" ", part] : [part])) : option.title}</span>
+            </label>
+          );
+        })}
+        {shown.length === 0 && <span className={field.empty_class}>No match</span>}
+      </div>
+    </>
+  );
+};
+
 const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
   const location = useLocation();
   const { setLoading } = useLoading();
@@ -270,26 +312,8 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
       case "notice":
         return <StatusNotice tone={field.tone}>{field.text}</StatusNotice>;
       // A tick box per option, keeping the values ticked.
-      case "checks": {
-        const ticked = values[field.key] || [];
-        return (
-          <div className={field.grid_class}>
-            {field.options.length === 0 ? (
-              <span className={field.empty_class}>{field.empty}</span>
-            ) : (
-              field.options.map((option) => {
-                const chosen = ticked.includes(option.value);
-                return (
-                  <label key={option.value} className={`${field.class_name}${chosen ? " is-chosen" : ""}`}>
-                    <input type="checkbox" checked={chosen} onChange={() => toggle(field.key, option.value)} />
-                    <span>{option.parts ? option.parts.flatMap((part, at) => (at ? [" ", part] : [part])) : option.title}</span>
-                  </label>
-                );
-              })
-            )}
-          </div>
-        );
-      }
+      case "checks":
+        return <CheckGrid field={field} ticked={values[field.key] || []} toggle={(value) => toggle(field.key, value)} />;
       case "publications":
         return <PublicationsBlock formData={formData} field={field} />;
       case "date":

@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { apiDepartmentList } from '../../api/lookups';
+import SearchSelect from '../../components/forms/fields/SearchSelect';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import LeaveRequests from './LeaveRequests';
 import DatePicker from 'react-datepicker';
@@ -291,12 +292,14 @@ const AttendancePage = () => {
   }, [isAdmin]);
 
   const saveButton = <CustomButton text="Save attendance" onClick={handleSave} busy={saving} done={saved} disabled={loading} />;
-  const departmentName = (id) => departments.find((d) => String(d.id) === String(id))?.name;
+  // Written by code; the full name is searched, not shown.
+  const departmentOptions = departments.map((d) => ({ title: d.code || d.name, value: d.id, keywords: d.name }));
+  const departmentName = (id) => (departments.find((d) => String(d.id) === String(id)) || {}).code || departments.find((d) => String(d.id) === String(id))?.name;
 
   return (
     <Page
       title="Attendance"
-      description={!departmentsLoaded ? 'Loading departments…' : departments.length > 0 ? `${departments.map((d) => d.name).join(', ')}` : (isAdmin ? 'No departments exist yet.' : 'Your departments will appear here once an admin tags you.')}
+      description={!departmentsLoaded ? 'Loading departments…' : departments.length > 0 ? `${departments.map((d) => d.code || d.name).join(', ')}` : (isAdmin ? 'No departments exist yet.' : 'Your departments will appear here once an admin tags you.')}
       actions={(
         <CustomButton
           text="Upload CSV"
@@ -327,19 +330,18 @@ const AttendancePage = () => {
           <div className="attendance-filters">
             <div className="input-field-container">
               <label className="input-label" htmlFor="attendance-page-department">Department</label>
-              <select id="attendance-page-department"
-                className="input-field"
+              <SearchSelect
+                id="attendance-page-department"
                 value={departmentFilter}
-                onChange={(e) => {
+                options={departmentOptions}
+                emptyTitle={isAdmin || departments.length > 1 ? 'All departments' : null}
+                onChange={(next) => {
                   if (!confirmDiscardMarks()) return;
-                  setDepartmentFilter(e.target.value);
+                  setDepartmentFilter(next);
                   setHistoryPage(1);
                 }}
                 disabled={!isAdmin && departments.length <= 1}
-              >
-                {(isAdmin || departments.length > 1) && <option value="">All departments</option>}
-                {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
+              />
             </div>
 
             {(activeTab === 'mark' || activeTab === 'monthly' || activeTab === 'history') && (
@@ -628,10 +630,7 @@ const AttendancePage = () => {
             </div>
             <div className="input-field-container">
               <label className="input-label" htmlFor="attendance-page-department-2">Department</label>
-              <select id="attendance-page-department-2" className="input-field" value={exportDept} onChange={(e) => setExportDept(e.target.value)}>
-                <option value="">All departments</option>
-                {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
+              <SearchSelect id="attendance-page-department-2" value={exportDept} options={departmentOptions} emptyTitle="All departments" onChange={setExportDept} />
             </div>
             <div className="attendance-filters-action">
               <CustomButton text={filteredRoll ? `Download CSV for ${filteredRoll}` : 'Download CSV'} onClick={confirmExport} done={exported} disabled={exportFrom > exportTo} />

@@ -41,8 +41,8 @@ final class UgProfilePage extends PageDefinition
         $slot = $slotOn($current);
         $locked = fn (array $row) => $row + ($applied ? ['disabled' => true, 'hint' => self::LOCKED_NOTE] : []);
 
-        $departments = Department::orderBy('name')->get(['id', 'name'])
-            ->map(fn ($department) => ['title' => $department->name, 'value' => $department->id])->all();
+        $departments = Department::orderBy('name')->get(['id', 'name', 'code'])
+            ->map(fn ($department) => ['title' => \App\Support\DepartmentLabel::of($department), 'value' => $department->id, 'keywords' => $department->name])->all();
         $years = array_map(fn ($year) => ['title' => self::yearLabel($year), 'value' => $year], [1, 2, 3, 4]);
 
         return self::page(implode(' ', array_filter([$user->first_name, $user->last_name])), null, [

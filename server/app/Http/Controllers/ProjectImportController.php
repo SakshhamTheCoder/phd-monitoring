@@ -348,7 +348,7 @@ class ProjectImportController extends Controller
                         'type' => 'internal',
                         'faculty_code' => $faculty->faculty_code,
                         'name' => $faculty->user->name(),
-                        'department' => $faculty->department->name ?? 'N/A',
+                        'department' => \App\Support\DepartmentLabel::of($faculty->department) ?? 'N/A',
                         'designation' => $faculty->designation,
                         'email' => $faculty->user->email,
                     ];

@@ -67,7 +67,7 @@ final class ProjectWizardPage extends PageDefinition
         return $faculty ? [
             'code' => $faculty->faculty_code,
             'name' => $faculty->user->name(),
-            'department' => $faculty->department->name ?? 'N/A',
+            'department' => \App\Support\DepartmentLabel::of($faculty->department) ?? 'N/A',
             'designation' => $faculty->designation,
         ] : null;
     }
@@ -78,7 +78,7 @@ final class ProjectWizardPage extends PageDefinition
         return $pi ? [
             'code' => $pi['faculty_code'],
             'name' => trim(($pi['user']['first_name'] ?? '') . ' ' . ($pi['user']['last_name'] ?? '')),
-            'department' => $pi['department']['name'] ?? '',
+            'department' => \App\Support\DepartmentLabel::of($pi['department'] ?? null) ?? '',
             'designation' => $pi['designation'] ?? '',
         ] : null;
     }

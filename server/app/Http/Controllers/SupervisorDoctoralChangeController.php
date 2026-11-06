@@ -77,7 +77,7 @@ class SupervisorDoctoralChangeController extends Controller
                 'id' => $change->id,
                 'student_name' => $change->student->user->name(),
                 'student_roll_no' => $change->student->roll_no,
-                'department' => $change->student->department->name,
+                'department' => \App\Support\DepartmentLabel::of($change->student->department),
                 'change_type' => $change->change_type,
                 'member_type' => $change->member_type,
                 'faculty_type' => $change->faculty_type,

@@ -147,7 +147,7 @@ class Faculty extends Model
             $final_sup['name'] = $d->user->name();
             $final_sup['roll_no'] = $d->roll_no;
             $final_sup['type'] = 'Doctoral Committee';
-            $final_sup['department'] = $d->department->name;
+            $final_sup['department'] = \App\Support\DepartmentLabel::of($d->department);
             $final_sup['current_status'] = $d->current_status;
             $final_sup['phd_title'] = $d->phd_title;
             $out[] = $final_sup;
@@ -157,7 +157,7 @@ class Faculty extends Model
             $final_sup['name'] = $s->user->name();
             $final_sup['roll_no'] = $s->roll_no;
             $final_sup['type'] = 'Supervisor';
-            $final_sup['department'] = $s->department->name;
+            $final_sup['department'] = \App\Support\DepartmentLabel::of($s->department);
             $final_sup['current_status'] = $s->current_status;
             $final_sup['phd_title'] = $s->phd_title;
             $out[] = $final_sup;
@@ -367,7 +367,7 @@ class Faculty extends Model
                 'roll_no' => $student->roll_no,
                 'email' => $student->user?->email,
                 'phone' => $student->user?->phone,
-                'department' => $student->department?->name,
+                'department' => \App\Support\DepartmentLabel::of($student->department),
                 'date_of_admission' => $student->date_of_registration?->format('Y-m-d'),
                 'overall_progress' => $student->overall_progress,
             ]);
@@ -395,7 +395,7 @@ class Faculty extends Model
             'faculty_code' => $this->faculty_code,
             'name' => $this->user ? $this->user->name() : '',
             'designation' => $this->designation,
-            'department' => $this->department->name ?? '',
+            'department' => \App\Support\DepartmentLabel::of($this->department) ?? '',
             'department_id' => $this->department_id,
             'email' => $this->user->email ?? '',
             'phone' => $this->user->phone ?? '',

@@ -159,8 +159,8 @@ class UrfFlowTest extends TestCase
             ->assertJsonMissingPath('publications');
         $this->getJson('/api/urf?filters=' . urlencode(json_encode(['conditions' => [['key' => 'project_title', 'op' => '=', 'value' => $form['project_title']]]])))
             ->assertJsonPath('data.0.students', 'Asha Rao, Ravi Kumar')
-            // Department and year read as one answer per student.
-            ->assertJsonPath('data.0.department', 'URF Test Department, 3rd Year · URF Test Department, 2nd Year');
+            // Department (by its code) and year read as one answer per student.
+            ->assertJsonPath('data.0.department', 'URFTB, 3rd Year · URFTB, 2nd Year');
         $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(0, 'applications.0.fellows');
         $this->actingAs($partner, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(1, 'applications.0.fellows');
         // A report is the project's: the partner reads the two the applicant
@@ -177,11 +177,11 @@ class UrfFlowTest extends TestCase
         $this->actingAs($admin, 'sanctum')->getJson('/api/urf/urf-additional-info' . $onThisProject)->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.application_id', $id)
-            ->assertJsonPath('data.0.department', 'URF Test Department, 2nd Year');
+            ->assertJsonPath('data.0.department', 'URFTB, 2nd Year');
         $this->getJson('/api/urf/urf-half-yearly-report' . $onThisProject)->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.application_id', $id)
-            ->assertJsonPath('data.0.department', 'URF Test Department, 3rd Year');
+            ->assertJsonPath('data.0.department', 'URFTB, 3rd Year');
         $this->getJson('/api/urf/urf-final-report' . $onThisProject)->assertOk()->assertJsonCount(1, 'data');
         $this->getJson('/api/urf/urf-application/filters')->assertOk()->assertJsonFragment(['key_name' => 'project_title']);
         $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/urf-final-report')->assertForbidden();

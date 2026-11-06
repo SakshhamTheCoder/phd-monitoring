@@ -169,7 +169,7 @@ final class CoursesPage extends PageDefinition
                 ->key('level')->value('')->from('level')->open(),
             // Posted either way, as the page always sent it; only admin picks it.
             $picksDepartment
-                ? Field::select('Department', Department::orderBy('name')->get()->map(fn ($department) => ['title' => $department->name, 'value' => $department->id])->all())
+                ? Field::select('Department', Department::orderBy('name')->get()->map(fn ($department) => ['title' => \App\Support\DepartmentLabel::of($department), 'value' => $department->id, 'keywords' => $department->name])->all())
                     ->key('department_id')->value('')->from('department_id')->required()->open()
                 : Field::hidden('department_id')->value('')->from('department_id')->open(),
         ];

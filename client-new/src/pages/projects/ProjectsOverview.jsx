@@ -141,7 +141,7 @@ const ProjectsOverview = () => {
                       <div className="po-project-title">{project.title}</div>
                     </td>
                     <td><Badge badge={project.category} /></td>
-                    <td>{project.role}</td>
+                    <td>{project.pi}</td>
                     <td>{project.agency}</td>
                     <td>{project.amount}</td>
                     <td>{project.duration}</td>

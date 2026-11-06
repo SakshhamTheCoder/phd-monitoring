@@ -46,7 +46,7 @@ class ExternalReviewController extends Controller
             'expert_name'   => $expert ? trim($expert->first_name . ' ' . $expert->last_name) : null,
             'student_name'  => $form->student?->user?->name(),
             'title'         => $form->revised_phd_title,
-            'department'    => $form->student?->department?->name,
+            'department'    => \App\Support\DepartmentLabel::of($form->student?->department),
             'form_id'       => $form->id,
             'pdf_url'       => $form->revised_irb_pdf ? url('/api/external-review/' . $token . '/pdf') : null,
             'decision'      => $approval->consumed_at ? ($approval->approved ? 'recommend' : 'not_recommend') : null,

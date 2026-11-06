@@ -79,7 +79,7 @@ class Presentation extends Model
                 $user=User::where('id',$faculty->user_id)->first();
                 return [
                     'name' => $user?->name(),
-                    'department' => $faculty->department->name,
+                    'department' => \App\Support\DepartmentLabel::of($faculty->department),
                     'designation' => $faculty->designation,
                 ];
             }),

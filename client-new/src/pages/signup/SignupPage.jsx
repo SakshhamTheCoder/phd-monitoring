@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loader from '../../components/loader/loader';
+import SearchSelect from '../../components/forms/fields/SearchSelect';
 import { apiUrfResendVerification, apiUrfSignup } from '../../api/urf';
 import { NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { useUgDepartments } from '../../hooks/useUgDepartments';
@@ -27,7 +28,7 @@ const Field = ({ id, label, error, children }) => (
 );
 
 const SignupPage = () => {
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, control } = useForm();
   const departments = useUgDepartments();
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -239,12 +240,22 @@ const SignupPage = () => {
                 </Field>
 
                 <Field id="department_id" label="Department" error={errors.department_id}>
-                  <select id="department_id" className={field} defaultValue="" {...register('department_id', { required: true })}>
-                    <option value="" disabled>Select</option>
-                    {departments.map((department) => (
-                      <option key={department.id} value={department.id}>{department.name}</option>
-                    ))}
-                  </select>
+                  {/* Written by code; the full name is searched, not shown. */}
+                  <Controller
+                    name="department_id"
+                    control={control}
+                    defaultValue=""
+                    rules={{ required: true }}
+                    render={({ field: bound }) => (
+                      <SearchSelect
+                        id="department_id"
+                        className={field}
+                        value={bound.value}
+                        onChange={bound.onChange}
+                        options={departments.map((department) => ({ title: department.code || department.name, value: department.id, keywords: department.name }))}
+                      />
+                    )}
+                  />
                 </Field>
                 <Field id="year" label="Year of study" error={errors.year} hint="Leave this alone and we read it from your address">
                   <select id="year" className={field} defaultValue="" {...register('year')}>

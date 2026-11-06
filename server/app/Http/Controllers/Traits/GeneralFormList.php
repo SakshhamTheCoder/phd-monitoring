@@ -424,7 +424,7 @@ trait GeneralFormList
             'department_id' => $student->department_id,
             'overall_progress' => $student->overall_progress,
             'roll_no' => $student->roll_no,
-            'department' => $student->department->name,
+            'department' => \App\Support\DepartmentLabel::of($student->department),
             'supervisors' => $student->supervisors->map(function ($s) {
                 return [
                     'faculty_code' => $s->faculty_code,

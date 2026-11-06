@@ -162,7 +162,7 @@ final class ProjectPage extends PageDefinition
         return $pi ? [
             'code' => $pi['faculty_code'],
             'name' => $pi['user'] ? trim(($pi['user']['first_name'] ?? '') . ' ' . ($pi['user']['last_name'] ?? '')) : '',
-            'department' => $pi['department']['name'] ?? '',
+            'department' => \App\Support\DepartmentLabel::of($pi['department'] ?? null) ?? '',
             'designation' => ($pi['designation'] ?? '') ?: '',
         ] : null;
     }

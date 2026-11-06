@@ -86,7 +86,7 @@ final class AreasPage extends PageDefinition
         $own = $scoped ? Department::find(DepartmentController::areaWriteDepartmentId($user)) : null;
         $options = $scoped
             ? ($own ? [['title' => $own->name, 'value' => $own->id]] : [])
-            : Department::orderBy('name')->get()->map(fn ($department) => ['title' => $department->name, 'value' => $department->id])->all();
+            : Department::orderBy('name')->get()->map(fn ($department) => ['title' => \App\Support\DepartmentLabel::of($department), 'value' => $department->id, 'keywords' => $department->name])->all();
 
         $department = Field::select('Department', $options)->key('department_id')->value($scoped ? ($own?->id ?? '') : '')->from('department_id');
         $department = $scoped ? $department->lockedIf(true)->alwaysSent() : $department;

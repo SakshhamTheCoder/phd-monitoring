@@ -126,11 +126,11 @@ final class UrfStudentFormRows
             self::row([
                 $locked('Name', $application["student{$slot}_name"] ?? null),
                 $locked('Roll No.', $application["student{$slot}_roll_no"] ?? null),
-                $locked('Department', $application["student{$slot}_department"]['name'] ?? null),
+                $locked('Department', \App\Support\DepartmentLabel::of($application["student{$slot}_department"] ?? null) ?? null),
                 $locked('Email', $application["student{$slot}_email"] ?? null),
                 $locked('Contact No.', $application["student{$slot}_phone"] ?? null),
                 $locked('Faculty Mentor Name', implode(', ', array_map($mentorName, $mentors))),
-                $locked('Faculty Mentor Department', implode(', ', array_filter(array_map(fn ($m) => $m['department']['name'] ?? null, $mentors)))),
+                $locked('Faculty Mentor Department', implode(', ', array_filter(array_map(fn ($m) => \App\Support\DepartmentLabel::of($m['department'] ?? null) ?? null, $mentors)))),
             ]),
             Field::hidden('type')->value($type)->open(),
             ['kind' => 'heading', 'text' => 'Publication details', 'level' => 3],
@@ -164,8 +164,8 @@ final class UrfStudentFormRows
         // What the account already knows is locked, and sent anyway.
         $known = fn (Field $field, string $part) => !empty($account[$part]) ? $field->lockedIf(true)->alwaysSent() : $field;
         $years = array_map(fn ($year) => ['title' => $year . (['', 'st', 'nd', 'rd'][$year] ?? 'th') . ' Year', 'value' => $year], [1, 2, 3, 4]);
-        $departments = Department::orderBy('name')->get(['id', 'name'])
-            ->map(fn ($department) => ['title' => $department->name, 'value' => $department->id])->all();
+        $departments = Department::orderBy('name')->get(['id', 'name', 'code'])
+            ->map(fn ($department) => ['title' => \App\Support\DepartmentLabel::of($department), 'value' => $department->id, 'keywords' => $department->name])->all();
 
         return [self::row([
             $known(Field::text('Name')->key($key('name'))->value($start[$key('name')] ?? null)->required()->open(), 'name'),

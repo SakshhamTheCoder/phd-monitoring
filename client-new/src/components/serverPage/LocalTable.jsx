@@ -52,7 +52,8 @@ const LocalTable = ({ table, refreshKey, onRowAction }) => {
 
     const valuesOf = (row, key) => {
       const list = table.lists?.[key];
-      return list ? (row[list.list] || []).map((entry) => entry[list.key] ?? '') : [row[key] ?? ''];
+      // A list may be matched on more than one entry key (a department by name or code).
+      return list ? (row[list.list] || []).flatMap((entry) => [].concat(list.key).map((each) => entry[each] ?? '')) : [row[key] ?? ''];
     };
 
     const matches = (row, condition) => {

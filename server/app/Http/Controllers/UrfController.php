@@ -105,8 +105,8 @@ class UrfController extends Controller
                 'students' => collect([$a->student1_name, $a->student2_name])->filter()->join(', '),
                 // Two students of the same department and year say it once.
                 'department' => collect([
-                    [$a->student1Department?->name, $a->student1_year],
-                    [$a->student2Department?->name, $a->student2_year],
+                    [\App\Support\DepartmentLabel::of($a->student1Department), $a->student1_year],
+                    [\App\Support\DepartmentLabel::of($a->student2Department), $a->student2_year],
                 ])->map(fn ($pair) => collect([$pair[0], UrfApplication::yearLabel($pair[1])])->filter()->join(', '))
                     ->filter()->unique()->join(' · '),
                 'mentors' => collect([$a->mentor1, $a->mentor2])->filter()
@@ -161,7 +161,7 @@ class UrfController extends Controller
             $n = $row->application->slotOf($row->user);
             return [
                 'department' => collect([
-                    $row->application->{"student{$n}Department"}?->name,
+                    \App\Support\DepartmentLabel::of($row->application->{"student{$n}Department"}),
                     UrfApplication::yearLabel($row->application->{"student{$n}_year"}),
                 ])->filter()->join(', '),
             ];

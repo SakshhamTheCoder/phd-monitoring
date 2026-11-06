@@ -265,7 +265,7 @@ const SynopsisChecklist = () => {
                 setRule((prev) => (
                   prev.departments.some((department) => department.id === picked.id)
                     ? prev
-                    : { ...prev, departments: [...prev.departments, { id: picked.id, name: picked.name }] }
+                    : { ...prev, departments: [...prev.departments, { id: picked.id, name: picked.code || picked.name }] }
                 ));
               }}
             />

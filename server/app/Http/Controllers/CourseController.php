@@ -60,7 +60,7 @@ class CourseController extends Controller
                     'credits' => $course->credits,
                     'level' => $course->level,
                     'department_id' => $course->department_id,
-                    'department_name' => $course->department->name ?? 'N/A',
+                    'department_name' => \App\Support\DepartmentLabel::of($course->department) ?? 'N/A',
                     // Everyone the subject has been tagged to, not only those
                     // without a grade yet. A scholar who has passed it still took
                     // it, and counting only the ungraded showed 0 against every
