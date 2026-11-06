@@ -29,6 +29,17 @@ class Project extends Model {
     public function positions() { return $this->hasMany(ProjectPosition::class, 'project_id'); }
 
     /**
+     * projects.co_pis stays the display record; this keeps the access index
+     * (the project_co_pis pivot) in step with it so an internal Co-PI can
+     * reach the project. The project form and the CSV import both call it.
+     */
+    public function syncCoPiAccess(): void {
+        $codes = collect($this->co_pis ?: [])
+            ->pluck('faculty_code')->filter()->map(fn ($c) => (int) $c)->unique()->all();
+        $this->coPiFaculty()->sync($codes);
+    }
+
+    /**
      * Read forward. A project saved before the budget was restructured still
      * has to add up, so every read goes through the normalizer rather than
      * trusting whatever shape the column happens to hold.

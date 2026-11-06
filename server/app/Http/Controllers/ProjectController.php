@@ -115,7 +115,7 @@ class ProjectController extends Controller {
         $project->pi_faculty_code = $piCode;
         $this->fill($project, $request);
         $project->save();
-        $this->syncCoPis($project);
+        $project->syncCoPiAccess();
         return response()->json($project, 201);
     }
 
@@ -150,7 +150,7 @@ class ProjectController extends Controller {
             $project->gantt_chart_name = null;
         }
         $project->save();
-        if ($request->exists('co_pis')) $this->syncCoPis($project);
+        if ($request->exists('co_pis')) $project->syncCoPiAccess();
         $this->commitFileDeletions();
         return response()->json(['message' => 'Project updated', 'project' => $project]);
     }
@@ -186,16 +186,6 @@ class ProjectController extends Controller {
                 $q->orWhereHas('pi', fn ($f) => $f->where('department_id', $department));
             }
         });
-    }
-
-    /**
-     * projects.co_pis stays the display record; this keeps the access index in
-     * step with it so an internal Co-PI can reach the project.
-     */
-    private function syncCoPis(Project $project) {
-        $codes = collect($project->co_pis ?: [])
-            ->pluck('faculty_code')->filter()->map(fn ($c) => (int) $c)->unique()->all();
-        $project->coPiFaculty()->sync($codes);
     }
 
     private function fill(Project $project, Request $request) {

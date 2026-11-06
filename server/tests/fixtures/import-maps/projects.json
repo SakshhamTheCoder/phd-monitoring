@@ -1,0 +1,183 @@
+{
+  "sheet": [
+    {
+      "_rowNumber": 2,
+      "Project Title": "Smart Grid Analytics",
+      "PI Name": "Dr. A. Sharma",
+      "PI Email": "a.sharma@thapar.edu",
+      "Category (In-house, Research, Consultancy, Industry, International, Other)": "Research",
+      "Status (Pending, Active, On Hold, Completed)": "Active",
+      "Funding Agency": "DST",
+      "Sanctioned Amount (Rs)": "4850000",
+      "TIET Share (Rs, optional)": "#N/A",
+      "Start Date (DD-MM-YYYY)": "01-04-2025",
+      "Duration Years (0-5)": "3",
+      "Duration Months (0-11)": "",
+      "Focus Area (optional)": "Energy",
+      "Grant Type (optional)": "CRG",
+      "Co-PI 1 Name (optional)": "Prof. R. Miller",
+      "Co-PI 1 Email": "r.miller@mit.edu",
+      "Co-PI 2 Name": "",
+      "Co-PI 2 Email": "",
+      "Co-PI 3 Name": "",
+      "Co-PI 3 Email": "",
+      "Description (optional)": "Short abstract",
+      "Objective 1 (optional)": "Build X",
+      "Objective 2": "",
+      "Objective 3": "Evaluate Y",
+      "Objective 4": "",
+      "Objective 5": "",
+      "SDGs (optional, numbers 1-17 comma separated)": "7, 9",
+      "Sanction Letter Link (optional)": "https://example.org/letter.pdf"
+    },
+    {
+      "_rowNumber": 3,
+      "Project Title": "",
+      "PI Name": "",
+      "PI Email": "",
+      "Category (In-house, Research, Consultancy, Industry, International, Other)": "",
+      "Status (Pending, Active, On Hold, Completed)": "",
+      "Funding Agency": "",
+      "Sanctioned Amount (Rs)": "",
+      "TIET Share (Rs, optional)": "",
+      "Start Date (DD-MM-YYYY)": "",
+      "Duration Years (0-5)": "",
+      "Duration Months (0-11)": "",
+      "Focus Area (optional)": "",
+      "Grant Type (optional)": "",
+      "Co-PI 1 Name (optional)": "",
+      "Co-PI 1 Email": "",
+      "Co-PI 2 Name": "",
+      "Co-PI 2 Email": "",
+      "Co-PI 3 Name": "",
+      "Co-PI 3 Email": "",
+      "Description (optional)": "",
+      "Objective 1 (optional)": "",
+      "Objective 2": "",
+      "Objective 3": "",
+      "Objective 4": "",
+      "Objective 5": "",
+      "SDGs (optional, numbers 1-17 comma separated)": "",
+      "Sanction Letter Link (optional)": ""
+    },
+    {
+      "_rowNumber": 4,
+      "Project Title": "Low power sensing",
+      "PI Email": "B.Kaur@thapar.edu",
+      "Category": "consultancy",
+      "Funding Agency": "ISRO",
+      "Sanctioned Amount": "48,50,000",
+      "Start Date": "not a date",
+      "Duration Years": "1",
+      "Duration Months": "6",
+      "SDGs": "NA"
+    }
+  ],
+  "read": [
+    {
+      "title": "Smart Grid Analytics",
+      "pi_name": "Dr. A. Sharma",
+      "pi_email": "a.sharma@thapar.edu",
+      "category": "Research",
+      "status": "Active",
+      "funding_agency": "DST",
+      "amount": "4850000",
+      "tiet_share": "",
+      "start_date": "01-04-2025",
+      "duration_years": "3",
+      "duration_months": "",
+      "focus_area": "Energy",
+      "grant_type": "CRG",
+      "co_pis": [
+        {
+          "name": "Prof. R. Miller",
+          "email": "r.miller@mit.edu"
+        },
+        {
+          "name": "",
+          "email": ""
+        },
+        {
+          "name": "",
+          "email": ""
+        }
+      ],
+      "description": "Short abstract",
+      "objectives": [
+        "Build X",
+        "Evaluate Y"
+      ],
+      "sdgs": "7, 9",
+      "sanction_letter_link": "https://example.org/letter.pdf",
+      "row_number": 2
+    },
+    {
+      "title": "",
+      "pi_name": "",
+      "pi_email": "",
+      "category": "",
+      "status": "",
+      "funding_agency": "",
+      "amount": "",
+      "tiet_share": "",
+      "start_date": "",
+      "duration_years": "",
+      "duration_months": "",
+      "focus_area": "",
+      "grant_type": "",
+      "co_pis": [
+        {
+          "name": "",
+          "email": ""
+        },
+        {
+          "name": "",
+          "email": ""
+        },
+        {
+          "name": "",
+          "email": ""
+        }
+      ],
+      "description": "",
+      "objectives": [],
+      "sdgs": "",
+      "sanction_letter_link": "",
+      "row_number": 3
+    },
+    {
+      "title": "Low power sensing",
+      "pi_name": "",
+      "pi_email": "B.Kaur@thapar.edu",
+      "category": "consultancy",
+      "status": "",
+      "funding_agency": "ISRO",
+      "amount": "48,50,000",
+      "tiet_share": "",
+      "start_date": "not a date",
+      "duration_years": "1",
+      "duration_months": "6",
+      "focus_area": "",
+      "grant_type": "",
+      "co_pis": [
+        {
+          "name": "",
+          "email": ""
+        },
+        {
+          "name": "",
+          "email": ""
+        },
+        {
+          "name": "",
+          "email": ""
+        }
+      ],
+      "description": "",
+      "objectives": [],
+      "sdgs": "",
+      "sanction_letter_link": "",
+      "row_number": 4
+    }
+  ]
+}

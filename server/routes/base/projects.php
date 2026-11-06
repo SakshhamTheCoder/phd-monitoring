@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectImportController;
 use App\Http\Controllers\ProjectWizardController;
 use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\ProjectDocumentController;
@@ -12,6 +13,8 @@ Route::get('/meta', [ProjectController::class, 'meta'])->middleware('auth:sanctu
 Route::get('/filters', [ProjectController::class, 'listFilters'])->middleware('auth:sanctum');
 // The overview's figures and rows, each value phrased (App\Pages\ProjectsPage).
 Route::get('/overview', fn (\Illuminate\Http\Request $request) => response()->json(\App\Pages\ProjectsPage::overview($request)))->middleware('auth:sanctum');
+// The office loads projects from a CSV, rows read in the browser; before /{id}.
+Route::post('/import', [ProjectImportController::class, 'import'])->middleware('auth:sanctum');
 // The wizard reviews and saves a whole proposal in one request; before /{id}.
 Route::post('/wizard/review', [ProjectWizardController::class, 'review'])->middleware('auth:sanctum');
 Route::post('/wizard', [ProjectWizardController::class, 'store'])->middleware('auth:sanctum');

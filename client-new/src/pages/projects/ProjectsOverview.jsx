@@ -4,6 +4,7 @@ import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import { fillFromRow, useView } from '../../api/views';
 import { sendRequest } from '../../components/serverPage/requests';
+import RowsImportModal from '../../components/serverPage/RowsImportModal';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import FilterBar from '../../components/filterBar/FilterBar';
@@ -42,6 +43,8 @@ const ProjectsOverview = () => {
   const [loadFailed, setLoadFailed] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  // The name of the import dialog that is open, if one is.
+  const [importing, setImporting] = useState(null);
   const [exported, flashExported] = useDoneFlash();
 
   useEffect(() => {
@@ -70,6 +73,7 @@ const ProjectsOverview = () => {
 
   const runAction = (action) => {
     if (action.navigate) navigate(action.navigate);
+    else if (action.opens) setImporting(action.opens);
     else if (action.exports && data) {
       downloadCsv(action.exports, data.export);
       flashExported();
@@ -195,6 +199,17 @@ const ProjectsOverview = () => {
           </div>
         )}
       </Panel>
+
+      {Object.entries(view.imports || {}).map(([name, spec]) => (
+        <RowsImportModal
+          key={name}
+          spec={spec}
+          isOpen={importing === name}
+          onClose={() => setImporting(null)}
+          // The new projects are read again, under the search that is showing.
+          onImported={() => setLoadAttempt((n) => n + 1)}
+        />
+      ))}
 
       <CustomModal
         isOpen={!!deleteTarget}
