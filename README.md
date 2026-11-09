@@ -42,21 +42,12 @@ More detail: [Architecture](docs/architecture.md).
 
 ## Status
 
-In service at TIET since the first pilot in the Department of Chemical Engineering, now rolling out to other departments. The Flutter mobile app is built on the same API (separate private repository). In development: supervisor recommendation using semantic similarity and analytics dashboards.
-
+In service at TIET since the first pilot in the Department of Chemical Engineering, now rolling out to other departments. The Flutter mobile app is built on the same API (separate private repository).
 ## Team
 
 Mentor: Dr. Tarunpreet Bhatia, Associate Dean of Strategic Initiatives and Associate Professor, CSED, TIET.
 
 Built by Aadi Jain, Abhinav Jain, Akarsh Srivastava, Nandini Jain, Arnav Raj Singh, Ishwin, Manjot Kaur, Sakshham Bhagat and Saumil Makkar.
-
-Sakshham Bhagat worked on the backend and app development, and maintains this page.
-
-## Screenshots
-
-Screenshots use demo data only.
-
-_To be added._
 
 ## Contact
 
